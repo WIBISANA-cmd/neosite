@@ -1,0 +1,99 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    color-scheme: dark;
+  }
+
+  body {
+    @apply bg-neon-dark text-gray-300 font-sans overflow-x-hidden relative;
+  }
+
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
+    @apply font-display text-white;
+  }
+
+  /* Custom Scrollbar */
+  ::-webkit-scrollbar {
+    width: 8px;
+  }
+  ::-webkit-scrollbar-track {
+    @apply bg-neon-dark;
+  }
+  ::-webkit-scrollbar-thumb {
+    @apply bg-neon-primary/30 rounded-full hover:bg-neon-primary/60 transition-colors;
+  }
+}
+
+@layer components {
+  .glass-card {
+    @apply bg-neon-card/60 backdrop-blur-xl border border-white/5 rounded-2xl shadow-glass-inset transition-all duration-300;
+  }
+  .neon-border {
+    @apply border border-neon-primary/30 hover:border-neon-primary/70 hover:shadow-neon-glow transition-all duration-300;
+  }
+  .btn-primary {
+    @apply relative px-6 py-3 rounded-xl bg-gradient-to-r from-neon-secondary to-neon-primary text-neon-dark font-semibold overflow-hidden transition-all duration-300 hover:shadow-neon-strong hover:scale-105 active:scale-95;
+  }
+  .btn-secondary {
+    @apply px-6 py-3 rounded-xl bg-white/5 text-white font-medium border border-white/10 transition-all duration-300 hover:bg-white/10 hover:border-neon-primary/30 hover:text-neon-primary;
+  }
+  .section-padding {
+    @apply py-20 lg:py-32;
+  }
+  /* Utility Classes for JS Interactions */
+  .reveal-hidden {
+    opacity: 0;
+    transform: translateY(40px);
+    transition: all 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  }
+  .reveal-visible {
+    opacity: 1;
+    transform: translateY(0);
+  }
+  .nav-link-active {
+    @apply text-neon-primary relative;
+  }
+  .nav-link-active::after {
+    content: "";
+    position: absolute;
+    left: 0;
+    bottom: -0.25rem;
+    width: 100%;
+    height: 2px;
+    background: theme("colors.neon.primary");
+    box-shadow: theme("boxShadow.neon-glow");
+  }
+  /* Tilt Effect base */
+  .tilt-card {
+    transform-style: preserve-3d;
+  }
+  .tilt-content {
+    transform: translateZ(20px);
+  }
+}
+
+@layer utilities {
+  .animation-delay-200 {
+    animation-delay: 0.2s;
+  }
+  .animation-delay-300 {
+    animation-delay: 0.3s;
+  }
+  .animation-delay-400 {
+    animation-delay: 0.4s;
+  }
+  .animation-delay-600 {
+    animation-delay: 0.6s;
+  }
+  .animation-delay-2000 {
+    animation-delay: 2s;
+  }
+}
