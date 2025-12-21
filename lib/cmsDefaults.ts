@@ -16,7 +16,7 @@ export type CMSData = {
     address: string;
     social: { twitter: string; github: string; linkedin: string; instagram: string };
   };
-  navbar: { links: NavLink[]; ctaText: string; ctaLink: string; signInText?: string };
+  navbar: { links: NavLink[]; ctaText: string; ctaLink: string; signInText?: string; signInLink?: string };
   hero: {
     headline: string;
     subheadline: string;
@@ -55,6 +55,7 @@ export const defaultCmsData: CMSData = {
     ctaText: "Get Proposal",
     ctaLink: "#contact",
     signInText: "Sign In",
+    signInLink: "/login",
   },
   hero: {
     headline: "We forge digital futures that glow.",

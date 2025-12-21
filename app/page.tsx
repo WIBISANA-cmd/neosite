@@ -446,6 +446,7 @@ export default function HomePage() {
         ctaText={cmsData.navbar.ctaText}
         ctaLink={cmsData.navbar.ctaLink}
         signInText={cmsData.navbar.signInText}
+        signInLink={cmsData.navbar.signInLink}
       />
 
       <main>

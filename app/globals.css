@@ -93,6 +93,42 @@
   .label-text {
     @apply text-xs font-semibold uppercase tracking-wide;
   }
+  .bg-noise {
+    @apply bg-noise-pattern;
+  }
+  .electric-container {
+    position: relative;
+    overflow: hidden;
+    padding: 2px;
+    border-radius: 1.5rem;
+  }
+  .electric-spinner {
+    position: absolute;
+    top: -50%;
+    left: -50%;
+    width: 200%;
+    height: 200%;
+    background: conic-gradient(transparent 70%, #00f7ff 90%, transparent 100%);
+    animation: spin 4s linear infinite;
+  }
+  .electric-spinner-2 {
+    position: absolute;
+    top: -50%;
+    left: -50%;
+    width: 200%;
+    height: 200%;
+    background: conic-gradient(transparent 80%, #0066ff 95%, transparent 100%);
+    animation: spin 6s linear infinite reverse;
+    opacity: 0.6;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .electric-spinner,
+    .electric-spinner-2 {
+      animation: none;
+      background: #00f7ff;
+      opacity: 0.3;
+    }
+  }
 }
 
 @layer utilities {

@@ -5,9 +5,10 @@ type Props = {
   ctaText: string;
   ctaLink: string;
   signInText?: string;
+  signInLink?: string;
 };
 
-export function Navbar({ links, ctaText, ctaLink, signInText }: Props) {
+export function Navbar({ links, ctaText, ctaLink, signInText, signInLink }: Props) {
   return (
     <header id="navbar" className="fixed top-0 w-full z-50 transition-all duration-300 bg-transparent py-4">
       <div className="container mx-auto px-4 sm:px-6 lg:px-8 flex items-center justify-between">
@@ -32,7 +33,7 @@ export function Navbar({ links, ctaText, ctaLink, signInText }: Props) {
             <div className="absolute inset-0 h-full w-full scale-0 rounded-xl bg-white/30 transition-all duration-300 group-hover:scale-100 group-hover:opacity-0" />
           </a>
           {signInText && (
-            <a href={ctaLink} className="btn-secondary">
+            <a href={signInLink || "/login"} className="btn-secondary">
               {signInText}
             </a>
           )}
@@ -58,9 +59,14 @@ export function Navbar({ links, ctaText, ctaLink, signInText }: Props) {
             {link.label}
           </a>
         ))}
-        <a href={ctaLink} className="btn-primary mt-4">
+        <a href={ctaLink} className="btn-primary mt-2">
           {ctaText}
         </a>
+        {signInText && (
+          <a href={signInLink || "/login"} className="btn-secondary mt-2">
+            {signInText}
+          </a>
+        )}
       </div>
     </header>
   );

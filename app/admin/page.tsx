@@ -97,6 +97,7 @@ export default function AdminPage() {
   const [active, setActive] = useState<keyof CMSData>("global");
   const [status, setStatus] = useState("All changes saved");
   const fileInputRef = useRef<HTMLInputElement | null>(null);
+  const [showUserMenu, setShowUserMenu] = useState(false);
 
   useEffect(() => {
     const stored = typeof window !== "undefined" ? localStorage.getItem(STORAGE_KEY) : null;
@@ -174,6 +175,16 @@ export default function AdminPage() {
     if (confirm("Reset CMS data to defaults?")) setData(defaultCmsData);
   };
 
+  const handleLogout = async () => {
+    try {
+      await fetch("/api/auth/logout", { method: "POST", credentials: "include" });
+    } catch {
+      // ignore
+    } finally {
+      window.location.href = "/login";
+    }
+  };
+
   return (
     <div className="min-h-screen bg-neon-dark text-gray-200">
       <div className="flex h-screen">
@@ -197,8 +208,8 @@ export default function AdminPage() {
           </nav>
         </aside>
 
-        <div className="flex-1 flex flex-col">
-          <header className="glass-card h-16 border-b border-white/5 flex items-center justify-between px-4">
+        <div className="flex-1 flex flex-col" onClick={() => showUserMenu && setShowUserMenu(false)}>
+          <header className="glass-card relative z-20 h-16 border-b border-white/5 flex items-center justify-between px-4">
             <div className="flex items-center gap-3">
               <h2 className="text-xl font-display text-white">{sectionTitle[active]}</h2>
               <span className="text-xs text-gray-500">{status}</span>
@@ -216,6 +227,34 @@ export default function AdminPage() {
               <button className="btn-danger text-xs px-3 py-1.5" onClick={resetData}>
                 Reset
               </button>
+              <div className="relative">
+                <button
+                  className="w-9 h-9 rounded-full bg-gradient-to-tr from-neon-secondary to-neon-primary text-sm font-bold text-neon-dark flex items-center justify-center shadow-neon-glow border border-white/10"
+                  onClick={() => setShowUserMenu((v) => !v)}
+                  aria-label="User menu"
+                >
+                  AD
+                </button>
+                {showUserMenu && (
+                  <div className="absolute right-0 top-full mt-2 w-40 glass-card border border-white/10 rounded-xl shadow-2xl z-50">
+                    <button
+                      className="w-full text-left px-4 py-2 text-sm text-gray-200 hover:bg-white/5"
+                      onClick={() => {
+                        setShowUserMenu(false);
+                        alert("Profile coming soon");
+                      }}
+                    >
+                      Profile
+                    </button>
+                    <button
+                      className="w-full text-left px-4 py-2 text-sm text-red-400 hover:bg-white/5"
+                      onClick={handleLogout}
+                    >
+                      Log Out
+                    </button>
+                  </div>
+                )}
+              </div>
               <input ref={fileInputRef} type="file" accept=".json" className="hidden" onChange={handleImport} />
             </div>
           </header>
@@ -239,10 +278,11 @@ export default function AdminPage() {
             {active === "navbar" && (
               <div className="space-y-4">
                 <SectionCard title="Navbar Buttons">
-                  <div className="grid md:grid-cols-3 gap-4">
+                  <div className="grid md:grid-cols-4 gap-4">
                     <Input label="CTA Text" value={data.navbar.ctaText} onChange={(v) => update((d) => (d.navbar.ctaText = v))} />
                     <Input label="CTA Link" value={data.navbar.ctaLink} onChange={(v) => update((d) => (d.navbar.ctaLink = v))} />
                     <Input label="Sign In Text" value={data.navbar.signInText || ""} onChange={(v) => update((d) => (d.navbar.signInText = v))} />
+                    <Input label="Sign In Link" value={data.navbar.signInLink || "/login"} onChange={(v) => update((d) => (d.navbar.signInLink = v))} />
                   </div>
                 </SectionCard>
                 <ListEditor<NavLink>
