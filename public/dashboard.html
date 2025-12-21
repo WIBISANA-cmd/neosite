@@ -1,0 +1,641 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NeoDash - Futuristic Admin</title>
+    
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Space+Grotesk:wght@500;700&display=swap" rel="stylesheet">
+
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                        display: ['Space Grotesk', 'sans-serif'],
+                    },
+                    colors: {
+                        neon: {
+                            blue: '#00f3ff',
+                            cyan: '#00e1ff',
+                            purple: '#bc13fe',
+                            dark: '#050510',
+                            card: '#0a0a16',
+                            border: 'rgba(0, 243, 255, 0.2)',
+                            text: '#e2e8f0'
+                        }
+                    },
+                    backgroundImage: {
+                        'grid-pattern': "linear-gradient(to right, #ffffff05 1px, transparent 1px), linear-gradient(to bottom, #ffffff05 1px, transparent 1px)",
+                    },
+                    animation: {
+                        'float': 'float 6s ease-in-out infinite',
+                        'pulse-slow': 'pulse 4s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+                        'slide-up': 'slideUp 0.5s ease-out forwards',
+                        'fade-in': 'fadeIn 0.3s ease-out forwards',
+                    },
+                    keyframes: {
+                        float: {
+                            '0%, 100%': { transform: 'translateY(0)' },
+                            '50%': { transform: 'translateY(-20px)' },
+                        },
+                        slideUp: {
+                            '0%': { opacity: 0, transform: 'translateY(20px)' },
+                            '100%': { opacity: 1, transform: 'translateY(0)' },
+                        },
+                        fadeIn: {
+                            '0%': { opacity: 0 },
+                            '100%': { opacity: 1 },
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style type="text/tailwindcss">
+        @layer utilities {
+            .glass-panel {
+                @apply bg-neon-card/70 backdrop-blur-xl border border-neon-border shadow-[0_0_15px_-5px_rgba(0,243,255,0.1)];
+            }
+            .glass-panel-hover {
+                @apply hover:border-neon-blue/50 hover:shadow-[0_0_20px_-5px_rgba(0,243,255,0.3)] transition-all duration-300;
+            }
+            .neon-text {
+                @apply text-neon-blue drop-shadow-[0_0_5px_rgba(0,243,255,0.8)];
+            }
+            .scrollbar-hide::-webkit-scrollbar {
+                display: none;
+            }
+            .custom-scrollbar::-webkit-scrollbar {
+                width: 6px;
+                height: 6px;
+            }
+            .custom-scrollbar::-webkit-scrollbar-track {
+                @apply bg-neon-dark;
+            }
+            .custom-scrollbar::-webkit-scrollbar-thumb {
+                @apply bg-gray-700 rounded-full hover:bg-neon-blue;
+            }
+        }
+        
+        /* Chart Tooltip */
+        .chart-tooltip {
+            position: absolute;
+            background: rgba(0,0,0,0.9);
+            border: 1px solid #00f3ff;
+            padding: 4px 8px;
+            border-radius: 4px;
+            pointer-events: none;
+            font-size: 12px;
+            z-index: 50;
+            display: none;
+            color: #fff;
+        }
+    </style>
+</head>
+<body class="bg-neon-dark text-neon-text font-sans overflow-hidden selection:bg-neon-blue selection:text-black">
+
+    <div class="fixed inset-0 bg-grid-pattern bg-[length:40px_40px] pointer-events-none z-0"></div>
+    <div class="fixed top-[-10%] left-[-10%] w-[40vw] h-[40vw] bg-blue-600/10 rounded-full blur-[120px] animate-pulse-slow pointer-events-none z-0"></div>
+    <div class="fixed bottom-[-10%] right-[-10%] w-[40vw] h-[40vw] bg-cyan-500/10 rounded-full blur-[120px] animate-pulse-slow pointer-events-none z-0"></div>
+
+    <div class="flex h-screen relative z-10" id="app">
+
+        <aside id="sidebar" class="fixed inset-y-0 left-0 w-64 glass-panel border-r z-40 transform -translate-x-full lg:translate-x-0 transition-transform duration-300 flex flex-col">
+            <div class="h-16 flex items-center justify-between px-6 border-b border-neon-border">
+                <div class="flex items-center gap-2 font-display font-bold text-xl tracking-wider text-white">
+                    <div class="w-8 h-8 rounded-lg bg-gradient-to-br from-blue-600 to-neon-blue flex items-center justify-center shadow-lg shadow-neon-blue/20">N</div>
+                    NeoDash
+                </div>
+                <button id="close-sidebar" class="lg:hidden text-gray-400 hover:text-white">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                </button>
+            </div>
+
+            <div class="p-4">
+                <button class="w-full flex items-center justify-between px-4 py-2 bg-white/5 rounded-lg border border-white/10 hover:border-neon-blue/50 transition-colors text-sm">
+                    <span class="flex items-center gap-2">
+                        <span class="w-2 h-2 rounded-full bg-green-400 animate-pulse"></span>
+                        Main Workspace
+                    </span>
+                    <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+                </button>
+            </div>
+
+            <nav class="flex-1 overflow-y-auto py-2 px-3 space-y-1 custom-scrollbar">
+                <div id="nav-container"></div>
+            </nav>
+
+            <div class="p-4 border-t border-neon-border">
+                <button class="flex items-center gap-3 w-full p-2 hover:bg-white/5 rounded-lg transition-colors group">
+                    <div class="w-8 h-8 rounded-full bg-gradient-to-tr from-gray-700 to-gray-600 border border-white/20"></div>
+                    <div class="text-left flex-1">
+                        <p class="text-sm font-medium text-white group-hover:text-neon-blue">Admin User</p>
+                        <p class="text-xs text-gray-500">Pro Plan</p>
+                    </div>
+                    <svg class="w-5 h-5 text-gray-500 group-hover:text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/></svg>
+                </button>
+            </div>
+        </aside>
+
+        <main class="flex-1 flex flex-col min-w-0 lg:ml-64 bg-transparent h-screen overflow-hidden">
+            
+            <header class="h-16 glass-panel border-b flex items-center justify-between px-4 lg:px-8 z-30 sticky top-0">
+                <div class="flex items-center gap-4">
+                    <button id="open-sidebar" class="lg:hidden p-2 text-gray-400 hover:text-white">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/></svg>
+                    </button>
+                    <div class="relative hidden md:block group">
+                        <svg class="w-5 h-5 absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 group-focus-within:text-neon-blue transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+                        <input type="text" id="global-search" placeholder="Search (Ctrl+K)" class="bg-black/20 border border-white/10 rounded-full pl-10 pr-4 py-1.5 text-sm w-64 focus:outline-none focus:border-neon-blue focus:ring-1 focus:ring-neon-blue transition-all placeholder-gray-600 text-white">
+                    </div>
+                </div>
+
+                <div class="flex items-center gap-4">
+                    <button onclick="app.openCommandPalette()" class="hidden md:flex items-center gap-2 px-3 py-1.5 bg-neon-blue/10 border border-neon-blue/30 rounded-lg text-xs font-medium text-neon-blue hover:bg-neon-blue/20 transition-all">
+                        <span class="text-lg leading-none">+</span> New
+                    </button>
+
+                    <div class="relative">
+                        <button class="p-2 text-gray-400 hover:text-white relative">
+                            <span class="absolute top-1.5 right-1.5 w-2 h-2 bg-red-500 rounded-full animate-pulse"></span>
+                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/></svg>
+                        </button>
+                    </div>
+                </div>
+            </header>
+
+            <div class="flex-1 overflow-y-auto p-4 lg:p-8 custom-scrollbar scroll-smooth" id="scroll-container">
+                
+                <div class="flex flex-col md:flex-row md:items-center justify-between mb-8 animate-slide-up">
+                    <div>
+                        <div class="text-sm text-gray-500 mb-1">Overview / Dashboard</div>
+                        <h1 class="text-3xl font-display font-bold text-white">System Overview</h1>
+                    </div>
+                    <div class="mt-4 md:mt-0 flex items-center gap-2 bg-white/5 border border-white/10 rounded-lg p-1">
+                        <button class="px-3 py-1 text-sm rounded-md bg-white/10 text-white shadow-sm">7D</button>
+                        <button class="px-3 py-1 text-sm rounded-md text-gray-400 hover:text-white transition-colors">14D</button>
+                        <button class="px-3 py-1 text-sm rounded-md text-gray-400 hover:text-white transition-colors">30D</button>
+                    </div>
+                </div>
+
+                <div id="kpi-grid" class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6 mb-8">
+                    </div>
+
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
+                    <div class="lg:col-span-2 glass-panel p-6 rounded-xl animate-slide-up" style="animation-delay: 100ms;">
+                        <div class="flex items-center justify-between mb-6">
+                            <h3 class="text-lg font-bold text-white">Traffic Overview</h3>
+                            <button class="text-xs text-neon-blue hover:underline">View Report</button>
+                        </div>
+                        <div class="relative w-full h-[300px]" id="line-chart-container">
+                            </div>
+                    </div>
+                    <div class="glass-panel p-6 rounded-xl animate-slide-up" style="animation-delay: 150ms;">
+                        <div class="flex items-center justify-between mb-6">
+                            <h3 class="text-lg font-bold text-white">Orders by Category</h3>
+                        </div>
+                        <div class="relative w-full h-[300px]" id="bar-chart-container">
+                             </div>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 xl:grid-cols-3 gap-6">
+                    
+                    <div class="xl:col-span-2 glass-panel p-6 rounded-xl animate-slide-up" style="animation-delay: 200ms;">
+                        <div class="flex flex-col sm:flex-row sm:items-center justify-between mb-6 gap-4">
+                            <h3 class="text-lg font-bold text-white">Recent Orders</h3>
+                            <div class="flex gap-2">
+                                <input type="text" id="order-search" placeholder="Filter orders..." class="bg-black/30 border border-white/10 rounded-lg px-3 py-1 text-sm focus:border-neon-blue focus:outline-none">
+                                <select id="order-sort" class="bg-black/30 border border-white/10 rounded-lg px-2 py-1 text-sm focus:border-neon-blue focus:outline-none">
+                                    <option value="date-desc">Newest</option>
+                                    <option value="amount-desc">Amount High</option>
+                                    <option value="amount-asc">Amount Low</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="overflow-x-auto">
+                            <table class="w-full text-left border-collapse">
+                                <thead>
+                                    <tr class="text-gray-400 text-xs uppercase border-b border-white/10">
+                                        <th class="py-3 px-2">ID</th>
+                                        <th class="py-3 px-2">Customer</th>
+                                        <th class="py-3 px-2">Status</th>
+                                        <th class="py-3 px-2">Amount</th>
+                                        <th class="py-3 px-2">Date</th>
+                                        <th class="py-3 px-2 text-right">Action</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="orders-table-body" class="text-sm">
+                                    </tbody>
+                            </table>
+                        </div>
+                        <div class="mt-4 flex justify-between items-center text-xs text-gray-500">
+                            <span>Showing 5 of 50</span>
+                            <div class="flex gap-1">
+                                <button class="px-2 py-1 bg-white/5 rounded hover:bg-white/10 disabled:opacity-50" disabled>&lt;</button>
+                                <button class="px-2 py-1 bg-white/5 rounded hover:bg-white/10">&gt;</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="flex flex-col gap-6 animate-slide-up" style="animation-delay: 250ms;">
+                        
+                        <div class="glass-panel p-5 rounded-xl">
+                            <h3 class="text-sm font-bold text-white mb-4 uppercase tracking-wider">System Health</h3>
+                            <div id="health-container" class="space-y-4">
+                                </div>
+                        </div>
+
+                        <div class="glass-panel p-5 rounded-xl flex flex-col flex-1">
+                            <div class="flex justify-between items-center mb-2">
+                                <h3 class="text-sm font-bold text-white uppercase tracking-wider">Quick Notes</h3>
+                                <button onclick="app.clearNotes()" class="text-xs text-red-400 hover:text-red-300">Clear</button>
+                            </div>
+                            <textarea id="quick-notes" class="w-full flex-1 bg-black/20 border border-white/10 rounded-lg p-3 text-sm text-gray-300 focus:border-neon-blue focus:outline-none resize-none h-32" placeholder="Jot down something... (Autosaved)"></textarea>
+                        </div>
+
+                         <div class="glass-panel p-5 rounded-xl max-h-[300px] overflow-y-auto custom-scrollbar">
+                            <h3 class="text-sm font-bold text-white mb-4 uppercase tracking-wider">Live Activity</h3>
+                            <div id="activity-feed" class="space-y-4 relative before:absolute before:inset-y-0 before:left-[9px] before:w-[2px] before:bg-white/5">
+                                </div>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </main>
+    </div>
+
+    <div id="command-palette" class="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm hidden flex items-start justify-center pt-20">
+        <div class="bg-neon-card border border-neon-blue/30 w-full max-w-lg rounded-xl shadow-2xl shadow-neon-blue/20 transform transition-all scale-100 overflow-hidden">
+            <div class="border-b border-white/10 px-4 py-3 flex items-center gap-3">
+                <svg class="w-5 h-5 text-neon-blue" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+                <input type="text" placeholder="Type a command or search..." class="bg-transparent w-full text-white placeholder-gray-500 focus:outline-none text-lg">
+                <span class="text-xs text-gray-500 border border-white/10 px-1.5 py-0.5 rounded">ESC</span>
+            </div>
+            <div class="py-2">
+                <div class="px-4 py-1 text-xs text-gray-500 font-bold uppercase">Actions</div>
+                <button class="w-full text-left px-4 py-2 hover:bg-neon-blue/10 hover:text-neon-blue text-gray-300 flex items-center gap-3 transition-colors">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg> Create New Order
+                </button>
+                <button class="w-full text-left px-4 py-2 hover:bg-neon-blue/10 hover:text-neon-blue text-gray-300 flex items-center gap-3 transition-colors">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg> Create Post
+                </button>
+                <div class="px-4 py-1 mt-2 text-xs text-gray-500 font-bold uppercase">Navigation</div>
+                <button class="w-full text-left px-4 py-2 hover:bg-neon-blue/10 hover:text-neon-blue text-gray-300 flex items-center gap-3 transition-colors">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/></svg> Go to Dashboard
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <div id="toast-container" class="fixed bottom-4 right-4 z-50 flex flex-col gap-2"></div>
+
+    <script>
+        // --- 1. MOCK DATA ---
+        const mockData = {
+            menu: [
+                { name: 'Dashboard', icon: 'M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z', active: true },
+                { name: 'Orders', icon: 'M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z', count: 12 },
+                { name: 'Analytics', icon: 'M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z' },
+                { name: 'Users', icon: 'M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z' },
+                { name: 'Settings', icon: 'M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z' },
+            ],
+            kpis: [
+                { title: 'Total Revenue', value: '$24,500', trend: '+12%', isUp: true, icon: 'M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z', color: 'text-green-400', points: [20, 25, 40, 30, 45, 50, 60] },
+                { title: 'Total Orders', value: '1,240', trend: '+5%', isUp: true, icon: 'M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z', color: 'text-neon-blue', points: [30, 40, 35, 50, 49, 60, 70] },
+                { title: 'Visitors', value: '45.2k', trend: '-2%', isUp: false, icon: 'M15 12a3 3 0 11-6 0 3 3 0 016 0z M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z', color: 'text-purple-400', points: [50, 45, 40, 35, 40, 30, 25] },
+                { title: 'Avg. Time', value: '4m 30s', trend: '+8%', isUp: true, icon: 'M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z', color: 'text-yellow-400', points: [10, 15, 12, 18, 20, 22, 25] },
+            ],
+            lineChartData: [20, 45, 30, 60, 55, 75, 65, 80, 70, 90, 85, 100],
+            barChartData: [
+                { cat: 'Elec', val: 75 }, { cat: 'Fash', val: 50 }, { cat: 'Home', val: 65 }, { cat: 'Spor', val: 40 }, { cat: 'Book', val: 30 }
+            ],
+            orders: [
+                { id: '#ORD-001', customer: 'Alex Neon', status: 'Paid', amount: 120.00, date: '2023-10-24' },
+                { id: '#ORD-002', customer: 'Sarah Cyber', status: 'Pending', amount: 85.50, date: '2023-10-24' },
+                { id: '#ORD-003', customer: 'John Doe', status: 'Failed', amount: 250.00, date: '2023-10-23' },
+                { id: '#ORD-004', customer: 'Jane Void', status: 'Paid', amount: 45.00, date: '2023-10-23' },
+                { id: '#ORD-005', customer: 'Mike Bit', status: 'Paid', amount: 500.00, date: '2023-10-22' },
+            ],
+            activity: [
+                { text: 'New order #ORD-001 received', type: 'order', time: '2 min ago' },
+                { text: 'Server CPU usage spiked to 85%', type: 'system', time: '15 min ago' },
+                { text: 'Sarah updated profile picture', type: 'user', time: '1 hr ago' },
+                { text: 'Weekly report generated', type: 'content', time: '3 hrs ago' },
+                { text: 'Payment gateway maintenance', type: 'system', time: '5 hrs ago' },
+            ],
+            health: [
+                { name: 'Uptime', val: 99.9, color: 'bg-green-400' },
+                { name: 'API Latency', val: 45, max: 200, unit: 'ms', color: 'bg-neon-blue' },
+                { name: 'Disk Usage', val: 72, color: 'bg-yellow-400' },
+            ]
+        };
+
+        // --- 2. APP LOGIC ---
+        class DashboardApp {
+            constructor() {
+                this.init();
+            }
+
+            init() {
+                this.renderSidebar();
+                this.renderKPIs();
+                this.renderLineChart();
+                this.renderBarChart();
+                this.renderOrders();
+                this.renderActivity();
+                this.renderHealth();
+                this.initNotes();
+                this.initListeners();
+            }
+
+            // --- RENDERERS ---
+
+            renderSidebar() {
+                const container = document.getElementById('nav-container');
+                container.innerHTML = mockData.menu.map(item => `
+                    <a href="#" class="flex items-center justify-between px-3 py-2 rounded-lg transition-all duration-200 group ${item.active ? 'bg-neon-blue/10 text-neon-blue' : 'text-gray-400 hover:bg-white/5 hover:text-white'}">
+                        <div class="flex items-center gap-3">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="${item.icon}"/></svg>
+                            <span class="font-medium">${item.name}</span>
+                        </div>
+                        ${item.count ? `<span class="bg-neon-blue text-black text-[10px] font-bold px-1.5 rounded-full">${item.count}</span>` : ''}
+                    </a>
+                `).join('');
+            }
+
+            renderKPIs() {
+                const container = document.getElementById('kpi-grid');
+                container.innerHTML = mockData.kpis.map((kpi, idx) => {
+                    // Mini Sparkline SVG
+                    const points = kpi.points;
+                    const max = Math.max(...points);
+                    const polyline = points.map((p, i) => `${(i / (points.length - 1)) * 100},${30 - ((p / max) * 30)}`).join(' ');
+                    
+                    return `
+                    <div class="glass-panel glass-panel-hover p-5 rounded-xl flex flex-col justify-between h-32 relative overflow-hidden group animate-slide-up" style="animation-delay: ${idx * 100}ms">
+                        <div class="flex justify-between items-start z-10">
+                            <div>
+                                <p class="text-xs text-gray-400 uppercase tracking-wider">${kpi.title}</p>
+                                <h2 class="text-2xl font-bold text-white mt-1">${kpi.value}</h2>
+                            </div>
+                            <div class="p-2 rounded-lg bg-white/5 text-white">
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="${kpi.icon}"/></svg>
+                            </div>
+                        </div>
+                        <div class="flex items-center justify-between mt-auto z-10">
+                            <span class="text-xs font-medium ${kpi.isUp ? 'text-green-400' : 'text-red-400'} flex items-center gap-1">
+                                ${kpi.isUp ? '↑' : '↓'} ${kpi.trend}
+                            </span>
+                            <svg class="w-24 h-8 overflow-visible stroke-current ${kpi.color} opacity-50" preserveAspectRatio="none" viewBox="0 0 100 30">
+                                <polyline points="${polyline}" fill="none" stroke-width="2" stroke-linecap="round" vector-effect="non-scaling-stroke" />
+                            </svg>
+                        </div>
+                        <div class="absolute -right-10 -bottom-10 w-32 h-32 bg-gradient-to-br from-white/5 to-transparent rounded-full blur-2xl group-hover:bg-white/10 transition-colors"></div>
+                    </div>
+                `}).join('');
+            }
+
+            renderLineChart() {
+                const container = document.getElementById('line-chart-container');
+                const data = mockData.lineChartData;
+                const width = 800, height = 300;
+                const max = Math.max(...data) * 1.1; // padding
+                
+                // Coordinates
+                const points = data.map((val, i) => {
+                    const x = (i / (data.length - 1)) * width;
+                    const y = height - (val / max) * height;
+                    return [x, y];
+                });
+
+                const pathD = `M ${points.map(p => p.join(',')).join(' L ')}`;
+                const areaD = `${pathD} L ${width},${height} L 0,${height} Z`;
+
+                container.innerHTML = `
+                    <svg viewBox="0 0 ${width} ${height}" class="w-full h-full overflow-visible" preserveAspectRatio="none">
+                        <defs>
+                            <linearGradient id="lineGradient" x1="0" y1="0" x2="0" y2="1">
+                                <stop offset="0%" stop-color="#00f3ff" stop-opacity="0.2"/>
+                                <stop offset="100%" stop-color="#00f3ff" stop-opacity="0"/>
+                            </linearGradient>
+                        </defs>
+                        <line x1="0" y1="${height}" x2="${width}" y2="${height}" stroke="#ffffff20" stroke-width="1" />
+                        <line x1="0" y1="${height/2}" x2="${width}" y2="${height/2}" stroke="#ffffff10" stroke-width="1" stroke-dasharray="4" />
+                        
+                        <path d="${areaD}" fill="url(#lineGradient)" class="animate-fade-in" />
+                        
+                        <path d="${pathD}" fill="none" stroke="#00f3ff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" filter="drop-shadow(0 0 5px #00f3ff)">
+                            <animate attributeName="stroke-dasharray" from="0, 2000" to="2000, 0" duration="1.5s" />
+                        </path>
+
+                        ${points.map((p, i) => `
+                            <circle cx="${p[0]}" cy="${p[1]}" r="4" fill="#050510" stroke="#00f3ff" stroke-width="2" class="hover:r-6 transition-all duration-200 cursor-pointer" onmouseenter="app.showTooltip(evt, '${data[i]}')" onmouseleave="app.hideTooltip()" />
+                        `).join('')}
+                    </svg>
+                    <div id="chart-tooltip" class="chart-tooltip"></div>
+                `;
+            }
+
+            renderBarChart() {
+                const container = document.getElementById('bar-chart-container');
+                const data = mockData.barChartData;
+                const height = 300;
+                const max = Math.max(...data.map(d => d.val));
+
+                container.innerHTML = `
+                    <div class="flex items-end justify-between h-full w-full gap-2 pt-4">
+                        ${data.map((d, i) => {
+                            const h = (d.val / max) * 100;
+                            return `
+                                <div class="flex-1 flex flex-col items-center gap-2 group cursor-pointer" onmouseenter="app.showTooltip(evt, '${d.val} Orders')" onmouseleave="app.hideTooltip()">
+                                    <div class="w-full bg-white/5 rounded-t-sm relative h-full flex items-end overflow-hidden">
+                                        <div class="w-full bg-neon-blue/80 hover:bg-neon-cyan transition-all duration-500 ease-out shadow-[0_0_10px_rgba(0,243,255,0.3)]" style="height: 0%; animation: growBar 1s ease-out forwards ${i*0.1}s;">
+                                            <style>@keyframes growBar { to { height: ${h}% } }</style>
+                                        </div>
+                                    </div>
+                                    <span class="text-xs text-gray-500">${d.cat}</span>
+                                </div>
+                            `;
+                        }).join('')}
+                    </div>
+                `;
+            }
+
+            renderOrders() {
+                const tbody = document.getElementById('orders-table-body');
+                const statusColors = {
+                    'Paid': 'bg-green-500/20 text-green-400 border-green-500/30',
+                    'Pending': 'bg-yellow-500/20 text-yellow-400 border-yellow-500/30',
+                    'Failed': 'bg-red-500/20 text-red-400 border-red-500/30',
+                };
+
+                tbody.innerHTML = mockData.orders.map(order => `
+                    <tr class="border-b border-white/5 hover:bg-white/5 transition-colors group">
+                        <td class="py-3 px-2 font-mono text-neon-blue text-xs">${order.id}</td>
+                        <td class="py-3 px-2 font-medium text-white">${order.customer}</td>
+                        <td class="py-3 px-2">
+                            <span class="px-2 py-0.5 rounded text-[10px] uppercase font-bold border ${statusColors[order.status]}">${order.status}</span>
+                        </td>
+                        <td class="py-3 px-2 text-white">$${order.amount.toFixed(2)}</td>
+                        <td class="py-3 px-2 text-gray-400 text-xs">${order.date}</td>
+                        <td class="py-3 px-2 text-right">
+                            <button class="text-gray-400 hover:text-white p-1 hover:bg-white/10 rounded" onclick="app.showToast('Action clicked: ${order.id}')">•••</button>
+                        </td>
+                    </tr>
+                `).join('');
+            }
+
+            renderActivity() {
+                const container = document.getElementById('activity-feed');
+                const icons = {
+                    'order': 'text-green-400',
+                    'system': 'text-red-400',
+                    'user': 'text-blue-400',
+                    'content': 'text-yellow-400'
+                };
+                
+                container.innerHTML = mockData.activity.map(act => `
+                    <div class="relative pl-6 py-1 group">
+                        <div class="absolute left-0 top-2 w-2 h-2 rounded-full ${icons[act.type] || 'text-gray-400'} bg-current shadow-[0_0_5px_currentColor]"></div>
+                        <p class="text-sm text-gray-300 group-hover:text-white transition-colors">${act.text}</p>
+                        <span class="text-xs text-gray-600">${act.time}</span>
+                    </div>
+                `).join('');
+            }
+
+            renderHealth() {
+                const container = document.getElementById('health-container');
+                container.innerHTML = mockData.health.map(h => `
+                    <div>
+                        <div class="flex justify-between text-xs mb-1">
+                            <span class="text-gray-400">${h.name}</span>
+                            <span class="text-white font-mono">${h.val}${h.unit || '%'}</span>
+                        </div>
+                        <div class="h-1.5 w-full bg-white/5 rounded-full overflow-hidden">
+                            <div class="h-full ${h.color} shadow-[0_0_5px_currentColor]" style="width: ${h.max ? (h.val/h.max)*100 : h.val}%"></div>
+                        </div>
+                    </div>
+                `).join('');
+            }
+
+            // --- LOGIC ---
+
+            initNotes() {
+                const textarea = document.getElementById('quick-notes');
+                textarea.value = localStorage.getItem('neoDash_notes') || '';
+                textarea.addEventListener('input', (e) => {
+                    localStorage.setItem('neoDash_notes', e.target.value);
+                });
+            }
+
+            clearNotes() {
+                if(confirm('Clear all notes?')) {
+                    document.getElementById('quick-notes').value = '';
+                    localStorage.removeItem('neoDash_notes');
+                    this.showToast('Notes cleared', 'success');
+                }
+            }
+
+            showTooltip(evt, text) {
+                const el = document.getElementById('chart-tooltip');
+                // Basic positioning relative to mouse or element
+                // For simplicity, just next to mouse
+                // In production, calculate relative to SVG point
+                el.style.display = 'block';
+                el.style.left = (evt.layerX + 10) + 'px';
+                el.style.top = (evt.layerY - 30) + 'px';
+                el.textContent = text;
+            }
+
+            hideTooltip() {
+                document.getElementById('chart-tooltip').style.display = 'none';
+            }
+
+            showToast(msg, type = 'info') {
+                const container = document.getElementById('toast-container');
+                const el = document.createElement('div');
+                const colors = type === 'success' ? 'border-green-500 text-green-400' : 'border-neon-blue text-neon-blue';
+                el.className = `glass-panel px-4 py-3 rounded-lg border-l-4 ${colors} text-sm font-medium shadow-lg animate-slide-up flex items-center gap-2`;
+                el.innerHTML = `<span>${msg}</span>`;
+                container.appendChild(el);
+                setTimeout(() => {
+                    el.style.opacity = '0';
+                    setTimeout(() => el.remove(), 300);
+                }, 3000);
+            }
+
+            openCommandPalette() {
+                const el = document.getElementById('command-palette');
+                el.classList.remove('hidden');
+                el.querySelector('input').focus();
+            }
+
+            closeCommandPalette() {
+                document.getElementById('command-palette').classList.add('hidden');
+            }
+
+            initListeners() {
+                // Sidebar
+                document.getElementById('open-sidebar').onclick = () => document.getElementById('sidebar').classList.remove('-translate-x-full');
+                document.getElementById('close-sidebar').onclick = () => document.getElementById('sidebar').classList.add('-translate-x-full');
+
+                // Search Filter Logic
+                document.getElementById('global-search').addEventListener('input', (e) => {
+                    const term = e.target.value.toLowerCase();
+                    // Filter Orders
+                    const rows = document.querySelectorAll('#orders-table-body tr');
+                    rows.forEach(row => {
+                        const text = row.innerText.toLowerCase();
+                        row.style.display = text.includes(term) ? '' : 'none';
+                    });
+                    // Filter KPI (basic opacity dimming)
+                    const kpis = document.querySelectorAll('#kpi-grid > div');
+                    kpis.forEach(kpi => {
+                         const text = kpi.innerText.toLowerCase();
+                         kpi.style.opacity = text.includes(term) || term === '' ? '1' : '0.2';
+                    });
+                });
+
+                // Sort Logic (Basic DOM reordering for demo)
+                document.getElementById('order-sort').addEventListener('change', (e) => {
+                    const type = e.target.value;
+                    let sorted = [...mockData.orders];
+                    if (type === 'amount-desc') sorted.sort((a,b) => b.amount - a.amount);
+                    if (type === 'amount-asc') sorted.sort((a,b) => a.amount - b.amount);
+                    // Re-render
+                    mockData.orders = sorted; // Update mock for simplicity
+                    this.renderOrders();
+                });
+
+                // Command Palette Keys
+                document.addEventListener('keydown', (e) => {
+                    if (e.ctrlKey && e.key === 'k') {
+                        e.preventDefault();
+                        this.openCommandPalette();
+                    }
+                    if (e.key === 'Escape') {
+                        this.closeCommandPalette();
+                    }
+                });
+
+                // Close palette on background click
+                document.getElementById('command-palette').addEventListener('click', (e) => {
+                    if(e.target === document.getElementById('command-palette')) this.closeCommandPalette();
+                });
+            }
+        }
+
+        // --- INIT ---
+        const app = new DashboardApp();
+    </script>
+</body>
+</html>

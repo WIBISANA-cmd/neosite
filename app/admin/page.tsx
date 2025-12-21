@@ -2,102 +2,21 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
+import AdminDashboard from "./components/AdminDashboard";
+import { Input, ListEditor, SectionCard } from "./components/ui";
 import { CMSData, defaultCmsData, FAQItem, FooterLink, HeroStat, NavLink, ServiceItem, Testimonial, TimelineStep, WorkItem } from "../../lib/cmsDefaults";
 
-type ListEditorProps<T> = {
-  title: string;
-  items: T[];
-  onChange: (items: T[]) => void;
-  renderItem: (item: T, update: (next: Partial<T> | T) => void, idx: number) => JSX.Element;
-  addItem: () => T;
-};
-
-function ListEditor<T>({ title, items, onChange, renderItem, addItem }: ListEditorProps<T>) {
-  const handleUpdate = (idx: number, next: Partial<T> | T) => {
-    const cloned: any[] = structuredClone(items);
-    const current = cloned[idx];
-    cloned[idx] =
-      typeof current === "object" && current !== null && typeof next === "object"
-        ? { ...current, ...next }
-        : next;
-    onChange(cloned as T[]);
-  };
-
-  return (
-    <div className="glass-card p-4 rounded-2xl space-y-4 border border-white/5">
-      <div className="flex items-center justify-between">
-        <h4 className="font-semibold text-white">{title}</h4>
-        <button className="btn-secondary px-3 py-1 text-sm" onClick={() => onChange([...items, addItem()])}>
-          Add
-        </button>
-      </div>
-      <div className="space-y-4">
-        {items.map((item, idx) => (
-          <div key={idx} className="border border-white/10 rounded-xl p-3 space-y-3">
-            <div className="flex items-center justify-between text-sm text-gray-400">
-              <span>
-                Item {idx + 1}
-              </span>
-              <button
-                className="btn-danger"
-                onClick={() => onChange(items.filter((_, i) => i !== idx))}
-              >
-                Remove
-              </button>
-            </div>
-            {renderItem(item, (next) => handleUpdate(idx, next), idx)}
-          </div>
-        ))}
-      </div>
-    </div>
-  );
-}
-
-const Input = ({
-  label,
-  value,
-  onChange,
-  type = "text",
-  textarea,
-  rows = 3,
-}: {
-  label: string;
-  value: string | number;
-  onChange: (val: string) => void;
-  type?: string;
-  textarea?: boolean;
-  rows?: number;
-}) => (
-  <label className="space-y-1 block">
-    <span className="label-text text-gray-400">{label}</span>
-    {textarea ? (
-      <textarea
-        className="input-field min-h-[120px]"
-        value={value}
-        rows={rows}
-        onChange={(e) => onChange(e.target.value)}
-      />
-    ) : (
-      <input className="input-field" type={type} value={value} onChange={(e) => onChange(e.target.value)} />
-    )}
-  </label>
-);
-
-const SectionCard = ({ title, children }: { title: string; children: React.ReactNode }) => (
-  <div className="glass-card p-6 rounded-2xl border border-white/5 space-y-4">
-    <h3 className="text-xl font-semibold text-white">{title}</h3>
-    {children}
-  </div>
-);
+type AdminSection = keyof CMSData | "dashboard";
 
 const STORAGE_KEY = "neosite_cms_data";
 
 export default function AdminPage() {
   const [data, setData] = useState<CMSData>(defaultCmsData);
-  const [active, setActive] = useState<keyof CMSData>("global");
+  const [active, setActive] = useState<AdminSection>("dashboard");
   const [status, setStatus] = useState("All changes saved");
   const fileInputRef = useRef<HTMLInputElement | null>(null);
   const [showUserMenu, setShowUserMenu] = useState(false);
+  const [cmsOpen, setCmsOpen] = useState(true);
 
   useEffect(() => {
     const stored = typeof window !== "undefined" ? localStorage.getItem(STORAGE_KEY) : null;
@@ -122,6 +41,7 @@ export default function AdminPage() {
 
   const sectionTitle = useMemo(
     () => ({
+      dashboard: "Dashboard",
       global: "Global Settings",
       navbar: "Navigation Bar",
       hero: "Hero Section",
@@ -135,6 +55,10 @@ export default function AdminPage() {
       footer: "Footer",
       seo: "SEO",
     }),
+    []
+  );
+  const cmsSections: AdminSection[] = useMemo(
+    () => ["global", "navbar", "hero", "services", "works", "about", "timeline", "testimonials", "faq", "contact", "footer", "seo"],
     []
   );
 
@@ -196,15 +120,34 @@ export default function AdminPage() {
             CMS
           </div>
           <nav className="space-y-1">
-            {(Object.keys(sectionTitle) as Array<keyof CMSData>).map((key) => (
+            <button
+              onClick={() => setActive("dashboard")}
+              className={`sidebar-link w-full text-left ${active === "dashboard" ? "active" : ""}`}
+            >
+              {sectionTitle.dashboard}
+            </button>
+            <div className="border border-white/10 rounded-xl overflow-hidden">
               <button
-                key={key}
-                onClick={() => setActive(key)}
-                className={`sidebar-link w-full text-left ${active === key ? "active" : ""}`}
+                onClick={() => setCmsOpen((v) => !v)}
+                className="sidebar-link w-full text-left justify-between pr-3"
               >
-                {sectionTitle[key]}
+                <span className="flex items-center gap-2">CMS</span>
+                <span className={`transition-transform ${cmsOpen ? "rotate-90" : ""}`}>›</span>
               </button>
-            ))}
+              {cmsOpen && (
+                <div className="bg-white/5 border-t border-white/10">
+                  {cmsSections.map((key) => (
+                    <button
+                      key={key}
+                      onClick={() => setActive(key)}
+                      className={`sidebar-link w-full text-left pl-8 ${active === key ? "active" : ""}`}
+                    >
+                      {sectionTitle[key]}
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
           </nav>
         </aside>
 
@@ -260,6 +203,7 @@ export default function AdminPage() {
           </header>
 
           <main className="flex-1 overflow-y-auto p-6 space-y-6">
+            {active === "dashboard" && <AdminDashboard />}
             {active === "global" && (
               <SectionCard title="Global">
                 <div className="grid md:grid-cols-2 gap-4">
