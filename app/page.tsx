@@ -10,9 +10,37 @@ import { Testimonials } from "../components/Testimonials";
 import { FAQ } from "../components/FAQ";
 import { Contact } from "../components/Contact";
 import { Footer } from "../components/Footer";
-import { useEffect } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { defaultCmsData } from "../lib/cmsDefaults";
 
 export default function HomePage() {
+  const [cmsData, setCmsData] = useState(defaultCmsData);
+  const successMessageRef = useRef(cmsData.contact.successMessage);
+
+  useEffect(() => {
+    const stored = typeof window !== "undefined" ? localStorage.getItem("neosite_cms_data") : null;
+    if (stored) {
+      try {
+        setCmsData(JSON.parse(stored));
+      } catch {
+        setCmsData(defaultCmsData);
+      }
+    }
+  }, []);
+
+  useEffect(() => {
+    successMessageRef.current = cmsData.contact.successMessage;
+  }, [cmsData.contact.successMessage]);
+
+  const serviceFilters = useMemo(
+    () =>
+      cmsData.services.filters
+        .split(",")
+        .map((f) => f.trim().toLowerCase())
+        .filter(Boolean),
+    [cmsData.services.filters]
+  );
+
   useEffect(() => {
     const throttle = (func: (...args: any[]) => void, limit: number) => {
       let inThrottle: ReturnType<typeof setTimeout> | null = null;
@@ -124,17 +152,18 @@ export default function HomePage() {
     sections.forEach((section) => activeSectionObserver?.observe(section));
 
     const startCountUp = (el: HTMLElement) => {
-      const target = parseInt(el.getAttribute("data-target") || "0", 10);
+      const targetAttr = el.getAttribute("data-target") || "0";
+      const target = parseFloat(targetAttr);
       const duration = 2000;
-      const step = Math.ceil(target / (duration / 16));
+      const step = target / (duration / 16);
       let current = 0;
       const timer = setInterval(() => {
         current += step;
         if (current >= target) {
-          el.textContent = target.toString();
+          el.textContent = target % 1 !== 0 ? target.toFixed(1) : Math.round(target).toString();
           clearInterval(timer);
         } else {
-          el.textContent = current.toString();
+          el.textContent = target % 1 !== 0 ? current.toFixed(1) : Math.round(current).toString();
         }
       }, 16);
     };
@@ -227,6 +256,7 @@ export default function HomePage() {
       const techStack = (item.getAttribute("data-tech") || "").split(",");
       techContainer.innerHTML = "";
       techStack.forEach((tech) => {
+        if (!tech.trim()) return;
         techContainer.innerHTML += `<span class="px-3 py-1 rounded-full bg-neon-primary/10 border border-neon-primary/30 text-sm text-neon-primary">${tech.trim()}</span>`;
       });
       modal.classList.remove("hidden");
@@ -251,6 +281,7 @@ export default function HomePage() {
 
     let currentSlide = 0;
     const showSlide = (index: number) => {
+      if (!slides.length) return;
       slides.forEach((slide, i) => {
         slide.classList.toggle("opacity-100", i === index);
         slide.classList.toggle("opacity-0", i !== index);
@@ -265,9 +296,16 @@ export default function HomePage() {
       currentSlide = index;
     };
 
-    const nextSlide = () => showSlide((currentSlide + 1) % slides.length);
-    const prevSlideFn = () => showSlide((currentSlide - 1 + slides.length) % slides.length);
+    const nextSlide = () => {
+      if (!slides.length) return;
+      showSlide((currentSlide + 1) % slides.length);
+    };
+    const prevSlideFn = () => {
+      if (!slides.length) return;
+      showSlide((currentSlide - 1 + slides.length) % slides.length);
+    };
     const startSlideTimer = () => {
+      if (!slides.length) return;
       slideInterval = setInterval(nextSlide, 5000);
     };
     const stopSlideTimer = () => {
@@ -348,7 +386,7 @@ export default function HomePage() {
 
       setTimeout(() => {
         contactForm.reset();
-        showToast("Message sent successfully! We will contact you soon.");
+        showToast(successMessageRef.current || "Message sent successfully! We will contact you soon.");
         btn.textContent = originalText;
         btn.disabled = false;
       }, 1500);
@@ -403,19 +441,35 @@ export default function HomePage() {
         }}
       />
 
-      <Navbar />
+      <Navbar
+        links={cmsData.navbar.links}
+        ctaText={cmsData.navbar.ctaText}
+        ctaLink={cmsData.navbar.ctaLink}
+        signInText={cmsData.navbar.signInText}
+      />
 
       <main>
-        <Hero />
-        <Services />
-        <Works />
-        <About />
-        <Testimonials />
-        <FAQ />
-        <Contact />
+        <Hero
+          headline={cmsData.hero.headline}
+          subheadline={cmsData.hero.subheadline}
+          ctaPrimary={cmsData.hero.ctaPrimary}
+          ctaSecondary={cmsData.hero.ctaSecondary}
+          stats={cmsData.hero.stats}
+        />
+        <Services
+          title={cmsData.services.title}
+          description={cmsData.services.description}
+          filters={serviceFilters}
+          items={cmsData.services.items}
+        />
+        <Works title={cmsData.works.title} description={cmsData.works.description} items={cmsData.works.items} />
+        <About title={cmsData.about.title} content={cmsData.about.content} values={cmsData.about.values} steps={cmsData.timeline.steps} />
+        <Testimonials title={cmsData.testimonials.title} items={cmsData.testimonials.items} />
+        <FAQ title="Frequently Asked Questions" items={cmsData.faq.items} />
+        <Contact heading={cmsData.contact.heading} email={cmsData.global.email} address={cmsData.global.address} />
       </main>
 
-      <Footer />
+      <Footer copyright={cmsData.footer.copyright} links={cmsData.footer.links} />
 
       <div id="toast-container" className="fixed bottom-4 right-4 z-[60] space-y-4" />
     </div>

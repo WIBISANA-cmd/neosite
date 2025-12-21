@@ -1,133 +1,66 @@
-export function Works() {
+import { WorkItem } from "../lib/cmsDefaults";
+
+type Props = {
+  title: string;
+  description: string;
+  items: WorkItem[];
+};
+
+export function Works({ title, description, items }: Props) {
+  const categories = Array.from(new Set(items.map((item) => item.category.toLowerCase()))).filter(Boolean);
+  const titleWords = title.split(" ");
+  const lastWord = titleWords.pop() || "";
+  const firstWords = titleWords.join(" ");
   return (
     <>
       <section id="works" className="section-padding bg-neon-dark/50 relative">
         <div className="container mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
           <div className="text-center mb-16 reveal-hidden">
             <h2 className="text-4xl font-bold mb-4">
-              Featured <span className="text-neon-primary">Works</span>
+              {firstWords} <span className="text-neon-primary">{lastWord}</span>
             </h2>
-            <p className="text-gray-400 max-w-2xl mx-auto">A showcase of our most recent and impactful digital projects.</p>
+            <p className="text-gray-400 max-w-2xl mx-auto">{description}</p>
           </div>
 
           <div className="flex flex-wrap justify-center gap-4 mb-12 reveal-hidden">
             <button className="work-filter-btn active px-4 py-2 rounded-full border border-neon-primary/50 bg-neon-primary/10 text-neon-primary text-sm transition-all hover:shadow-neon-glow" data-filter="all">
               All Projects
             </button>
-            <button className="work-filter-btn px-4 py-2 rounded-full border border-white/10 hover:border-neon-primary/50 hover:text-neon-primary text-sm transition-all" data-filter="saas">
-              SaaS
-            </button>
-            <button className="work-filter-btn px-4 py-2 rounded-full border border-white/10 hover:border-neon-primary/50 hover:text-neon-primary text-sm transition-all" data-filter="ecommerce">
-              E-commerce
-            </button>
-            <button className="work-filter-btn px-4 py-2 rounded-full border border-white/10 hover:border-neon-primary/50 hover:text-neon-primary text-sm transition-all" data-filter="landing">
-              Landing Pages
-            </button>
+            {categories.map((cat) => (
+              <button
+                key={cat}
+                className="work-filter-btn px-4 py-2 rounded-full border border-white/10 hover:border-neon-primary/50 hover:text-neon-primary text-sm transition-all"
+                data-filter={cat}
+              >
+                {cat.charAt(0).toUpperCase() + cat.slice(1)}
+              </button>
+            ))}
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6" id="works-grid">
-            <div
-              className="group relative h-72 rounded-2xl overflow-hidden cursor-pointer reveal-hidden work-item"
-              data-category="saas"
-              data-title="Orbital Dashboard"
-              data-desc="A comprehensive analytics dashboard for a space logistics company."
-              data-tech="React, Tailwind, D3.js"
-              data-img="https://source.unsplash.com/random/800x600?dashboard,dark"
-            >
-              <img src="https://source.unsplash.com/random/800x600?dashboard,dark" alt="Project 1" className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" />
-              <div className="absolute inset-0 bg-gradient-to-t from-neon-dark to-transparent opacity-0 group-hover:opacity-90 transition-opacity duration-300 p-6 flex flex-col justify-end">
-                <h3 className="text-2xl font-bold text-white relative inline-block">
-                  <span className="relative z-10">Orbital Dashboard</span>
-                  <span className="absolute bottom-0 left-0 w-0 h-1 bg-neon-primary transition-all duration-300 group-hover:w-full" />
-                </h3>
-                <p className="text-neon-primary mt-2">SaaS Platform</p>
-              </div>
-            </div>
-            <div
-              className="group relative h-72 rounded-2xl overflow-hidden cursor-pointer reveal-hidden work-item"
-              data-category="ecommerce"
-              data-title="NeonTech Gear"
-              data-desc="A futuristic e-commerce store for high-end tech gadgets."
-              data-tech="Shopify, Liquid, JS"
-              data-img="https://source.unsplash.com/random/800x600?tech,gadgets"
-            >
-              <img src="https://source.unsplash.com/random/800x600?tech,gadgets" alt="Project 2" className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" />
-              <div className="absolute inset-0 bg-gradient-to-t from-neon-dark to-transparent opacity-0 group-hover:opacity-90 transition-opacity duration-300 p-6 flex flex-col justify-end">
-                <h3 className="text-2xl font-bold text-white relative inline-block">
-                  <span className="relative z-10">NeonTech Gear</span>
-                  <span className="absolute bottom-0 left-0 w-0 h-1 bg-neon-primary transition-all duration-300 group-hover:w-full" />
-                </h3>
-                <p className="text-neon-primary mt-2">E-commerce</p>
-              </div>
-            </div>
-            <div
-              className="group relative h-72 rounded-2xl overflow-hidden cursor-pointer reveal-hidden work-item"
-              data-category="landing"
-              data-title="AeroSpace Launch"
-              data-desc="High-conversion landing page for a new aerospace startup."
-              data-tech="HTML, CSS, GSAP"
-              data-img="https://source.unsplash.com/random/800x600?rocket,space"
-            >
-              <img src="https://source.unsplash.com/random/800x600?rocket,space" alt="Project 3" className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" />
-              <div className="absolute inset-0 bg-gradient-to-t from-neon-dark to-transparent opacity-0 group-hover:opacity-90 transition-opacity duration-300 p-6 flex flex-col justify-end">
-                <h3 className="text-2xl font-bold text-white relative inline-block">
-                  <span className="relative z-10">AeroSpace Launch</span>
-                  <span className="absolute bottom-0 left-0 w-0 h-1 bg-neon-primary transition-all duration-300 group-hover:w-full" />
-                </h3>
-                <p className="text-neon-primary mt-2">Landing Page</p>
-              </div>
-            </div>
-            <div
-              className="group relative h-72 rounded-2xl overflow-hidden cursor-pointer reveal-hidden work-item"
-              data-category="saas"
-              data-title="CryptoFlow"
-              data-desc="Real-time cryptocurrency tracking and portfolio management tool."
-              data-tech="Vue.js, Node.js, Socket.io"
-              data-img="https://source.unsplash.com/random/800x600?crypto,chart"
-            >
-              <img src="https://source.unsplash.com/random/800x600?crypto,chart" alt="Project 4" className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" />
-              <div className="absolute inset-0 bg-gradient-to-t from-neon-dark to-transparent opacity-0 group-hover:opacity-90 transition-opacity duration-300 p-6 flex flex-col justify-end">
-                <h3 className="text-2xl font-bold text-white relative inline-block">
-                  <span className="relative z-10">CryptoFlow</span>
-                  <span className="absolute bottom-0 left-0 w-0 h-1 bg-neon-primary transition-all duration-300 group-hover:w-full" />
-                </h3>
-                <p className="text-neon-primary mt-2">SaaS Application</p>
-              </div>
-            </div>
-            <div
-              className="group relative h-72 rounded-2xl overflow-hidden cursor-pointer reveal-hidden work-item"
-              data-category="landing"
-              data-title="FutureSound Festival"
-              data-desc="Immersive event website for an electronic music festival."
-              data-tech="WebGL, Three.js"
-              data-img="https://source.unsplash.com/random/800x600?concert,neon"
-            >
-              <img src="https://source.unsplash.com/random/800x600?concert,neon" alt="Project 5" className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" />
-              <div className="absolute inset-0 bg-gradient-to-t from-neon-dark to-transparent opacity-0 group-hover:opacity-90 transition-opacity duration-300 p-6 flex flex-col justify-end">
-                <h3 className="text-2xl font-bold text-white relative inline-block">
-                  <span className="relative z-10">FutureSound Festival</span>
-                  <span className="absolute bottom-0 left-0 w-0 h-1 bg-neon-primary transition-all duration-300 group-hover:w-full" />
-                </h3>
-                <p className="text-neon-primary mt-2">Landing Page</p>
-              </div>
-            </div>
-            <div
-              className="group relative h-72 rounded-2xl overflow-hidden cursor-pointer reveal-hidden work-item"
-              data-category="ecommerce"
-              data-title="Moda Minimal"
-              data-desc="Clean, minimalist e-commerce experience for a fashion brand."
-              data-tech="Next.js, Stripe"
-              data-img="https://source.unsplash.com/random/800x600?fashion,minimal"
-            >
-              <img src="https://source.unsplash.com/random/800x600?fashion,minimal" alt="Project 6" className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" />
-              <div className="absolute inset-0 bg-gradient-to-t from-neon-dark to-transparent opacity-0 group-hover:opacity-90 transition-opacity duration-300 p-6 flex flex-col justify-end">
-                <h3 className="text-2xl font-bold text-white relative inline-block">
-                  <span className="relative z-10">Moda Minimal</span>
-                  <span className="absolute bottom-0 left-0 w-0 h-1 bg-neon-primary transition-all duration-300 group-hover:w-full" />
-                </h3>
-                <p className="text-neon-primary mt-2">E-commerce</p>
-              </div>
-            </div>
+            {items.map((item, idx) => {
+              const imageSrc = item.img || `https://source.unsplash.com/random/800x600?technology,${idx}`;
+              return (
+                <div
+                  key={item.title + idx}
+                  className="group relative h-72 rounded-2xl overflow-hidden cursor-pointer reveal-hidden work-item"
+                  data-category={item.category.toLowerCase()}
+                  data-title={item.title}
+                  data-desc={item.desc}
+                  data-tech={item.tags}
+                  data-img={imageSrc}
+                >
+                  <img src={imageSrc} alt={item.title} className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" />
+                  <div className="absolute inset-0 bg-gradient-to-t from-neon-dark to-transparent opacity-0 group-hover:opacity-90 transition-opacity duration-300 p-6 flex flex-col justify-end">
+                    <h3 className="text-2xl font-bold text-white relative inline-block">
+                      <span className="relative z-10">{item.title}</span>
+                      <span className="absolute bottom-0 left-0 w-0 h-1 bg-neon-primary transition-all duration-300 group-hover:w-full" />
+                    </h3>
+                    <p className="text-neon-primary mt-2">{item.category.charAt(0).toUpperCase() + item.category.slice(1)}</p>
+                  </div>
+                </div>
+              );
+            })}
           </div>
         </div>
       </section>

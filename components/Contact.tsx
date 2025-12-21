@@ -1,4 +1,10 @@
-export function Contact() {
+type Props = {
+  heading: string;
+  email: string;
+  address: string;
+};
+
+export function Contact({ heading, email, address }: Props) {
   return (
     <section id="contact" className="section-padding relative overflow-hidden">
       <div className="absolute bottom-0 left-0 w-full h-1/2 bg-gradient-to-t from-neon-primary/10 to-transparent -z-10" />
@@ -6,7 +12,7 @@ export function Contact() {
         <div className="grid lg:grid-cols-2 gap-16">
           <div className="reveal-hidden">
             <h2 className="text-4xl font-bold mb-6">
-              Let&apos;s build something <span className="text-neon-primary">legendary.</span>
+              {heading}
             </h2>
             <p className="text-lg text-gray-300 mb-12">
               Ready to elevate your digital presence? Fill out the form, and we&apos;ll get back to you with a proposal.
@@ -21,7 +27,7 @@ export function Contact() {
                 </div>
                 <div>
                   <h5 className="font-bold text-white">Email Us</h5>
-                  <p className="text-gray-400">hello@neosite.digital</p>
+                  <p className="text-gray-400">{email}</p>
                 </div>
               </div>
               <div className="flex items-center gap-4 glass-card p-4 neon-border">
@@ -33,7 +39,7 @@ export function Contact() {
                 </div>
                 <div>
                   <h5 className="font-bold text-white">Studio</h5>
-                  <p className="text-gray-400">Neo-Tokyo Digital District, Level 42</p>
+                  <p className="text-gray-400">{address}</p>
                 </div>
               </div>
             </div>

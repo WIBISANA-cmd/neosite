@@ -1,4 +1,8 @@
-export function Footer() {
+import { FooterLink } from "../lib/cmsDefaults";
+
+type Props = { copyright: string; links: FooterLink[] };
+
+export function Footer({ copyright, links }: Props) {
   return (
     <footer className="bg-black/40 py-12 border-t border-white/5 relative">
       <div className="container mx-auto px-4 sm:px-6 lg:px-8 flex flex-col md:flex-row items-center justify-between gap-8">
@@ -7,20 +11,13 @@ export function Footer() {
           NeoSite.
         </a>
         <div className="flex flex-wrap justify-center gap-8 text-sm text-gray-400">
-          <a href="#services" className="hover:text-neon-primary transition-colors">
-            Services
-          </a>
-          <a href="#works" className="hover:text-neon-primary transition-colors">
-            Works
-          </a>
-          <a href="#about" className="hover:text-neon-primary transition-colors">
-            About
-          </a>
-          <a href="#" className="hover:text-neon-primary transition-colors">
-            Privacy Policy
-          </a>
+          {links.map((link) => (
+            <a key={link.href} href={link.href} className="hover:text-neon-primary transition-colors">
+              {link.label}
+            </a>
+          ))}
         </div>
-        <p className="text-sm text-gray-500">© 2023 NeoSite Digital. All rights reserved.</p>
+        <p className="text-sm text-gray-500">{copyright}</p>
       </div>
       <button
         id="back-to-top"

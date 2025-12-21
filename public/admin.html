@@ -1,0 +1,801 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NeoSite CMS Admin</title>
+    
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Space+Grotesk:wght@500;700&display=swap" rel="stylesheet">
+
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                        display: ['Space Grotesk', 'sans-serif'],
+                    },
+                    colors: {
+                        neon: {
+                            primary: '#00f7ff',
+                            secondary: '#0066ff',
+                            dark: '#0a0a12',
+                            card: '#12121a',
+                            surface: '#1a1a24'
+                        }
+                    },
+                    animation: {
+                        'fade-in': 'fadeIn 0.3s ease-out forwards',
+                        'slide-in-right': 'slideInRight 0.3s ease-out forwards',
+                    },
+                    keyframes: {
+                        fadeIn: {
+                            '0%': { opacity: 0 },
+                            '100%': { opacity: 1 },
+                        },
+                        slideInRight: {
+                            '0%': { opacity: 0, transform: 'translateX(20px)' },
+                            '100%': { opacity: 1, transform: 'translateX(0)' },
+                        }
+                    }
+                },
+            },
+        }
+    </script>
+    <style type="text/tailwindcss">
+        @layer components {
+            .glass-panel {
+                @apply bg-neon-card/80 backdrop-blur-xl border border-white/5 shadow-xl;
+            }
+            .input-field {
+                @apply w-full bg-neon-dark border border-white/10 rounded-lg px-4 py-2.5 text-gray-200 focus:outline-none focus:border-neon-primary/50 focus:ring-1 focus:ring-neon-primary/50 transition-all placeholder-gray-600;
+            }
+            .btn-primary {
+                @apply bg-gradient-to-r from-neon-secondary to-neon-primary text-neon-dark font-semibold px-4 py-2 rounded-lg hover:shadow-[0_0_15px_rgba(0,247,255,0.4)] transition-all active:scale-95 flex items-center gap-2 justify-center;
+            }
+            .btn-secondary {
+                @apply bg-white/5 border border-white/10 text-gray-300 hover:bg-white/10 hover:text-white px-4 py-2 rounded-lg transition-all active:scale-95 flex items-center gap-2 justify-center;
+            }
+            .btn-danger {
+                @apply bg-red-500/10 border border-red-500/20 text-red-400 hover:bg-red-500/20 hover:text-red-300 px-3 py-1.5 rounded-lg transition-all text-sm;
+            }
+            .sidebar-link {
+                @apply flex items-center gap-3 px-4 py-3 text-gray-400 hover:bg-white/5 hover:text-neon-primary rounded-lg transition-colors cursor-pointer;
+            }
+            .sidebar-link.active {
+                @apply bg-neon-primary/10 text-neon-primary border-r-2 border-neon-primary rounded-r-none;
+            }
+            .label-text {
+                @apply block text-xs font-medium text-gray-400 uppercase tracking-wider mb-1.5;
+            }
+            /* Custom Scrollbar */
+            ::-webkit-scrollbar { width: 6px; height: 6px; }
+            ::-webkit-scrollbar-track { @apply bg-neon-dark; }
+            ::-webkit-scrollbar-thumb { @apply bg-gray-700 rounded-full hover:bg-neon-secondary; }
+        }
+    </style>
+</head>
+<body class="bg-neon-dark text-gray-200 h-screen overflow-hidden selection:bg-neon-primary/30 selection:text-white">
+
+    <div class="flex h-full" id="app">
+        
+        <aside id="sidebar" class="w-64 glass-panel flex flex-col transition-all duration-300 z-20 absolute md:relative h-full -translate-x-full md:translate-x-0 border-r border-white/5">
+            <div class="p-6 border-b border-white/5 flex items-center justify-between">
+                <div class="flex items-center gap-2 font-display font-bold text-xl tracking-wide text-white">
+                    <div class="w-8 h-8 rounded-lg bg-gradient-to-br from-neon-secondary to-neon-primary flex items-center justify-center text-neon-dark">N</div>
+                    CMS
+                </div>
+                <button id="sidebar-close-btn" class="md:hidden text-gray-400 hover:text-white">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                </button>
+            </div>
+            
+            <nav class="flex-1 overflow-y-auto p-4 space-y-1" id="nav-menu">
+                </nav>
+
+            <div class="p-4 border-t border-white/5 text-xs text-center text-gray-600">
+                v1.0.0 &bull; Local Mode
+            </div>
+        </aside>
+
+        <div class="flex-1 flex flex-col relative w-full">
+            
+            <header class="glass-panel h-16 border-b border-white/5 flex items-center justify-between px-4 md:px-6 z-10">
+                <div class="flex items-center gap-4">
+                    <button id="sidebar-toggle-btn" class="md:hidden text-gray-400 hover:text-white">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/></svg>
+                    </button>
+                    <div class="relative hidden sm:block">
+                        <svg class="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+                        <input type="text" id="global-search" placeholder="Search fields..." class="bg-neon-dark border border-white/10 rounded-full pl-10 pr-4 py-1.5 text-sm w-64 focus:outline-none focus:border-neon-primary/50 text-gray-300">
+                    </div>
+                </div>
+
+                <div class="flex items-center gap-3">
+                    <span id="save-status" class="text-xs font-medium text-gray-500 hidden sm:block">All changes saved</span>
+                    <div class="h-4 w-px bg-white/10 hidden sm:block"></div>
+                    <button onclick="cmsApp.handlePreview()" class="btn-secondary text-xs px-3 py-1.5">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
+                        Preview
+                    </button>
+                    <div class="relative group">
+                         <button class="w-8 h-8 rounded-full bg-gradient-to-tr from-gray-700 to-gray-600 flex items-center justify-center text-xs font-bold ring-2 ring-transparent group-hover:ring-neon-primary transition-all">AD</button>
+                         <div class="absolute right-0 top-full mt-2 w-48 bg-neon-card border border-white/10 rounded-xl shadow-2xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all transform origin-top-right z-50">
+                            <div class="py-1">
+                                <button onclick="cmsApp.exportData()" class="block w-full text-left px-4 py-2 text-sm text-gray-300 hover:bg-white/5 hover:text-neon-primary">Export JSON</button>
+                                <button onclick="document.getElementById('import-file').click()" class="block w-full text-left px-4 py-2 text-sm text-gray-300 hover:bg-white/5 hover:text-neon-primary">Import JSON</button>
+                                <button onclick="cmsApp.resetData()" class="block w-full text-left px-4 py-2 text-sm text-red-400 hover:bg-white/5 hover:text-red-300 border-t border-white/5">Reset All</button>
+                            </div>
+                         </div>
+                    </div>
+                    <input type="file" id="import-file" class="hidden" accept=".json" onchange="cmsApp.importData(this)">
+                </div>
+            </header>
+
+            <main class="flex-1 overflow-y-auto p-4 md:p-8 relative scroll-smooth" id="main-editor">
+                <div class="max-w-4xl mx-auto space-y-6">
+                    <div class="flex items-center justify-between mb-6">
+                        <h2 id="section-title" class="text-2xl font-display font-bold text-white">Dashboard</h2>
+                        <div id="section-actions"></div>
+                    </div>
+
+                    <div id="editor-container" class="space-y-6">
+                        </div>
+                </div>
+            </main>
+
+        </div>
+    </div>
+
+    <div id="toast-container" class="fixed bottom-6 right-6 z-50 flex flex-col gap-3 pointer-events-none"></div>
+
+    <script>
+        // --- 1. DEFAULT DATA MODEL ---
+        const defaultData = {
+            global: {
+                brandName: "NeoSite",
+                tagline: "Futuristic Digital Solutions",
+                accent: "blue",
+                email: "hello@neosite.digital",
+                address: "Neo-Tokyo Digital District, Level 42",
+                social: { twitter: "#", github: "#", linkedin: "#", instagram: "#" }
+            },
+            navbar: {
+                links: [
+                    { label: "Home", href: "#hero" },
+                    { label: "Services", href: "#services" },
+                    { label: "Works", href: "#works" },
+                    { label: "About", href: "#about" },
+                    { label: "Contact", href: "#contact" }
+                ],
+                ctaText: "Get Proposal",
+                ctaLink: "#contact"
+            },
+            hero: {
+                headline: "We forge digital futures that glow.",
+                subheadline: "NeoSite is a next-generation creative studio building immersive web experiences.",
+                ctaPrimary: "Start Project",
+                ctaSecondary: "View Works",
+                stats: [
+                    { value: "150+", label: "Projects" },
+                    { value: "98%", label: "Satisfaction" },
+                    { value: "50+", label: "Partners" },
+                    { value: "4.9", label: "Rating" }
+                ]
+            },
+            services: {
+                title: "Our Expertise",
+                description: "High-performance solutions tailored for the modern digital landscape.",
+                filters: "All, Design, Development, Growth",
+                items: [
+                    { title: "UI/UX Design", icon: "pen", desc: "Crafting intuitive interfaces.", category: "design" },
+                    { title: "Modern Web Dev", icon: "code", desc: "Blazing fast websites.", category: "development" },
+                    { title: "SEO & Growth", icon: "chart", desc: "Data driven strategies.", category: "growth" },
+                    { title: "Cloud Systems", icon: "cloud", desc: "Scalable infrastructure.", category: "development" }
+                ]
+            },
+            works: {
+                title: "Featured Works",
+                description: "A showcase of our most recent and impactful projects.",
+                items: [
+                    { title: "Orbital Dash", category: "saas", desc: "Analytics dashboard.", tags: "React, D3.js", img: "" },
+                    { title: "Neon Gear", category: "ecommerce", desc: "Tech gadget store.", tags: "Shopify, JS", img: "" }
+                ]
+            },
+            about: {
+                title: "About NeoSite",
+                content: "We are a collective of forward-thinking designers and developers obsessed with pushing boundaries.",
+                values: ["Innovation First", "Pixel Perfection", "User-Centric", "Future Ready"]
+            },
+            timeline: {
+                steps: [
+                    { title: "Discover", desc: "We dive deep into your goals." },
+                    { title: "Design", desc: "Crafting futuristic visuals." },
+                    { title: "Build", desc: "Developing robust solutions." },
+                    { title: "Launch", desc: "Deploying seamlessly." }
+                ]
+            },
+            testimonials: {
+                title: "Client Stories",
+                items: [
+                    { name: "Sarah K.", role: "CEO, TechNova", message: "NeoSite transformed our platform.", rating: 5 },
+                    { name: "James L.", role: "CTO, Orbital", message: "Delivered ahead of schedule.", rating: 5 }
+                ]
+            },
+            faq: {
+                items: [
+                    { q: "What services do you offer?", a: "We specialize in UI/UX and Fullstack Dev." },
+                    { q: "Project timeline?", a: "Typically 4-8 weeks depending on scope." }
+                ]
+            },
+            contact: {
+                heading: "Let's build something legendary.",
+                emailRecipient: "admin@neosite.digital",
+                successMessage: "Message sent! We will reach out soon."
+            },
+            footer: {
+                copyright: "© 2023 NeoSite Digital. All rights reserved.",
+                links: [
+                    { label: "Privacy", href: "#" },
+                    { label: "Terms", href: "#" }
+                ]
+            },
+            seo: {
+                title: "NeoSite - Futuristic Agency",
+                description: "Premium digital agency website.",
+                robotsIndex: true
+            }
+        };
+
+        // --- 2. APP CORE LOGIC ---
+        class CMS {
+            constructor() {
+                this.data = this.loadData();
+                this.currentSection = 'global';
+                this.saveTimeout = null;
+                
+                this.initUI();
+                this.renderSidebar();
+                this.renderSection(this.currentSection);
+            }
+
+            // Data Management
+            loadData() {
+                const stored = localStorage.getItem('neosite_cms_data');
+                return stored ? JSON.parse(stored) : JSON.parse(JSON.stringify(defaultData));
+            }
+
+            saveData() {
+                document.getElementById('save-status').innerText = 'Saving...';
+                document.getElementById('save-status').classList.add('text-neon-primary');
+                
+                clearTimeout(this.saveTimeout);
+                this.saveTimeout = setTimeout(() => {
+                    localStorage.setItem('neosite_cms_data', JSON.stringify(this.data));
+                    document.getElementById('save-status').innerText = 'All changes saved';
+                    document.getElementById('save-status').classList.remove('text-neon-primary');
+                    // Optional: Show subtle toast for autosave
+                }, 1000); // 1s debounce
+            }
+
+            exportData() {
+                const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(this.data, null, 2));
+                const downloadAnchorNode = document.createElement('a');
+                downloadAnchorNode.setAttribute("href", dataStr);
+                downloadAnchorNode.setAttribute("download", "neosite_cms_export.json");
+                document.body.appendChild(downloadAnchorNode);
+                downloadAnchorNode.click();
+                downloadAnchorNode.remove();
+                this.showToast('Export successful', 'success');
+            }
+
+            importData(input) {
+                const file = input.files[0];
+                if (!file) return;
+
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    try {
+                        const json = JSON.parse(e.target.result);
+                        // Basic validation: check if 'global' key exists
+                        if (!json.global) throw new Error("Invalid format");
+                        
+                        this.data = json;
+                        this.saveData();
+                        this.renderSection(this.currentSection);
+                        this.showToast('Data imported successfully', 'success');
+                    } catch (err) {
+                        this.showToast('Error importing file: Invalid JSON', 'error');
+                    }
+                };
+                reader.readAsText(file);
+                input.value = ''; // Reset input
+            }
+
+            resetData() {
+                if(confirm("Are you sure? This will wipe all local changes.")) {
+                    localStorage.removeItem('neosite_cms_data');
+                    this.data = JSON.parse(JSON.stringify(defaultData));
+                    this.renderSection(this.currentSection);
+                    this.showToast('Reset to default', 'success');
+                }
+            }
+
+            // UI Rendering
+            initUI() {
+                // Mobile Sidebar Toggles
+                document.getElementById('sidebar-toggle-btn').addEventListener('click', () => {
+                    document.getElementById('sidebar').classList.remove('-translate-x-full');
+                });
+                document.getElementById('sidebar-close-btn').addEventListener('click', () => {
+                    document.getElementById('sidebar').classList.add('-translate-x-full');
+                });
+
+                // Search
+                document.getElementById('global-search').addEventListener('input', (e) => {
+                    this.handleSearch(e.target.value);
+                });
+            }
+
+            handleSearch(query) {
+                const links = document.querySelectorAll('.sidebar-link');
+                query = query.toLowerCase();
+                links.forEach(link => {
+                    const text = link.textContent.toLowerCase();
+                    if(text.includes(query)) {
+                        link.style.display = 'flex';
+                    } else {
+                        link.style.display = 'none';
+                    }
+                });
+            }
+
+            handlePreview() {
+                this.showToast('Preview mode: Opening index.html (Simulated)', 'info');
+                // In real scenario: window.open('/index.html', '_blank');
+            }
+
+            showToast(msg, type = 'success') {
+                const container = document.getElementById('toast-container');
+                const toast = document.createElement('div');
+                const colors = type === 'success' ? 'border-neon-primary text-neon-primary' : type === 'error' ? 'border-red-500 text-red-500' : 'border-blue-400 text-blue-400';
+                
+                toast.className = `glass-panel px-4 py-3 rounded-lg border-l-4 ${colors} shadow-lg flex items-center gap-2 animate-slide-in-right pointer-events-auto min-w-[200px]`;
+                toast.innerHTML = `<span class="font-medium text-sm">${msg}</span>`;
+                
+                container.appendChild(toast);
+                setTimeout(() => {
+                    toast.style.opacity = '0';
+                    toast.style.transform = 'translateY(10px)';
+                    setTimeout(() => toast.remove(), 300);
+                }, 3000);
+            }
+
+            renderSidebar() {
+                const menu = document.getElementById('nav-menu');
+                const sections = [
+                    { id: 'global', label: 'Global Settings', icon: 'M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 104 0 2 2 0 012-2h1.064M15 20.488V18a2 2 0 012-2h3.064' },
+                    { id: 'navbar', label: 'Navbar', icon: 'M4 6h16M4 12h16m-7 6h7' },
+                    { id: 'hero', label: 'Hero Section', icon: 'M13 10V3L4 14h7v7l9-11h-7z' },
+                    { id: 'services', label: 'Services', icon: 'M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10' },
+                    { id: 'works', label: 'Portfolio', icon: 'M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z' },
+                    { id: 'about', label: 'About', icon: 'M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z' },
+                    { id: 'timeline', label: 'Timeline', icon: 'M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z' },
+                    { id: 'testimonials', label: 'Testimonials', icon: 'M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z' },
+                    { id: 'faq', label: 'FAQ', icon: 'M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z' },
+                    { id: 'contact', label: 'Contact', icon: 'M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z' },
+                    { id: 'footer', label: 'Footer', icon: 'M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1' },
+                    { id: 'seo', label: 'SEO', icon: 'M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z' },
+                ];
+
+                menu.innerHTML = sections.map(s => `
+                    <div onclick="cmsApp.renderSection('${s.id}')" class="sidebar-link ${this.currentSection === s.id ? 'active' : ''}">
+                        <svg class="w-5 h-5 opacity-70" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="${s.icon}"/></svg>
+                        <span class="font-medium text-sm">${s.label}</span>
+                    </div>
+                `).join('');
+            }
+
+            // --- 3. EDITOR BUILDERS ---
+
+            renderSection(key) {
+                this.currentSection = key;
+                this.renderSidebar(); // Update active state
+                
+                const titleMap = {
+                    'global': 'Global Settings', 'navbar': 'Navigation Bar', 'hero': 'Hero Section', 'services': 'Services',
+                    'works': 'Portfolio & Works', 'about': 'About & Values', 'timeline': 'Timeline Process', 'testimonials': 'Testimonials',
+                    'faq': 'Frequently Asked Questions', 'contact': 'Contact Page', 'footer': 'Footer Area', 'seo': 'SEO Configuration'
+                };
+                
+                document.getElementById('section-title').textContent = titleMap[key];
+                const container = document.getElementById('editor-container');
+                container.innerHTML = ''; // Clear container
+
+                // Render logic based on key
+                switch(key) {
+                    case 'global':
+                        this.buildForm(container, [
+                            { type: 'text', label: 'Brand Name', path: 'global.brandName' },
+                            { type: 'text', label: 'Tagline', path: 'global.tagline' },
+                            { type: 'select', label: 'Accent Color', path: 'global.accent', options: ['blue', 'cyan', 'purple'] },
+                            { type: 'text', label: 'Email', path: 'global.email' },
+                            { type: 'text', label: 'Address', path: 'global.address' },
+                            { type: 'text', label: 'Twitter URL', path: 'global.social.twitter' },
+                            { type: 'text', label: 'LinkedIn URL', path: 'global.social.linkedin' },
+                        ]);
+                        break;
+                    case 'navbar':
+                        this.buildList(container, 'navbar.links', [
+                            { key: 'label', label: 'Label' }, { key: 'href', label: 'Link (#id)' }
+                        ]);
+                        this.buildForm(container, [
+                            { type: 'text', label: 'CTA Button Text', path: 'navbar.ctaText' },
+                            { type: 'text', label: 'CTA Button Link', path: 'navbar.ctaLink' },
+                        ]);
+                        break;
+                    case 'hero':
+                        this.buildForm(container, [
+                            { type: 'textarea', label: 'Headline', path: 'hero.headline' },
+                            { type: 'textarea', label: 'Sub-headline', path: 'hero.subheadline' },
+                            { type: 'group', label: 'Buttons', fields: [
+                                { type: 'text', label: 'Primary Text', path: 'hero.ctaPrimary' },
+                                { type: 'text', label: 'Secondary Text', path: 'hero.ctaSecondary' }
+                            ]}
+                        ]);
+                        this.buildList(container, 'hero.stats', [
+                            { key: 'value', label: 'Value (e.g. 50+)' }, { key: 'label', label: 'Label' }
+                        ], 'Statistics Cards');
+                        break;
+                    case 'services':
+                        this.buildForm(container, [
+                            { type: 'text', label: 'Section Title', path: 'services.title' },
+                            { type: 'textarea', label: 'Description', path: 'services.description' },
+                            { type: 'text', label: 'Filter Categories (comma separated)', path: 'services.filters' },
+                        ]);
+                        this.buildList(container, 'services.items', [
+                            { key: 'title', label: 'Service Title' },
+                            { key: 'desc', label: 'Short Description', type: 'textarea' },
+                            { key: 'icon', label: 'Icon', type: 'select', options: ['code', 'pen', 'chart', 'cloud', 'shield', 'spark'] },
+                            { key: 'category', label: 'Category Filter Key' }
+                        ], 'Service Cards');
+                        break;
+                    case 'works':
+                        this.buildForm(container, [
+                            { type: 'text', label: 'Section Title', path: 'works.title' },
+                            { type: 'textarea', label: 'Description', path: 'works.description' }
+                        ]);
+                        this.buildList(container, 'works.items', [
+                            { key: 'title', label: 'Project Title' },
+                            { key: 'category', label: 'Category (saas, ecommerce, landing)' },
+                            { key: 'desc', label: 'Description' },
+                            { key: 'tags', label: 'Tech Stack Tags' },
+                            { key: 'img', label: 'Image URL' }
+                        ], 'Portfolio Items');
+                        break;
+                    case 'about':
+                         this.buildForm(container, [
+                            { type: 'text', label: 'Title', path: 'about.title' },
+                            { type: 'textarea', label: 'Content', path: 'about.content', rows: 5 },
+                        ]);
+                        // Simple array of strings for values
+                         this.buildSimpleList(container, 'about.values', 'Core Values');
+                        break;
+                    case 'timeline':
+                        this.buildList(container, 'timeline.steps', [
+                            { key: 'title', label: 'Step Title' }, { key: 'desc', label: 'Description' }
+                        ], 'Process Steps');
+                        break;
+                    case 'testimonials':
+                        this.buildForm(container, [{ type: 'text', label: 'Title', path: 'testimonials.title' }]);
+                        this.buildList(container, 'testimonials.items', [
+                            { key: 'name', label: 'Client Name' },
+                            { key: 'role', label: 'Role/Company' },
+                            { key: 'message', label: 'Testimonial', type: 'textarea' },
+                            { key: 'rating', label: 'Rating (1-5)', type: 'number' }
+                        ]);
+                        break;
+                    case 'faq':
+                        this.buildList(container, 'faq.items', [
+                            { key: 'q', label: 'Question' },
+                            { key: 'a', label: 'Answer', type: 'textarea' }
+                        ]);
+                        break;
+                    case 'contact':
+                         this.buildForm(container, [
+                            { type: 'text', label: 'Form Heading', path: 'contact.heading' },
+                            { type: 'text', label: 'Recipient Email (Dummy)', path: 'contact.emailRecipient' },
+                            { type: 'text', label: 'Success Toast Message', path: 'contact.successMessage' },
+                        ]);
+                        break;
+                    case 'footer':
+                         this.buildForm(container, [
+                            { type: 'text', label: 'Copyright Text', path: 'footer.copyright' },
+                        ]);
+                        this.buildList(container, 'footer.links', [
+                            { key: 'label', label: 'Link Text' }, { key: 'href', label: 'URL' }
+                        ], 'Footer Links');
+                        break;
+                    case 'seo':
+                        this.buildForm(container, [
+                            { type: 'text', label: 'Meta Title', path: 'seo.title' },
+                            { type: 'textarea', label: 'Meta Description', path: 'seo.description' },
+                            { type: 'checkbox', label: 'Allow Search Engines (Index)', path: 'seo.robotsIndex' },
+                        ]);
+                        break;
+                }
+                
+                // Animate entry
+                container.classList.add('animate-fade-in');
+            }
+
+            // --- 4. FORM GENERATION HELPERS ---
+
+            // Utility to get/set nested objects by string path "hero.stats"
+            getValue(path) {
+                return path.split('.').reduce((o, i) => o[i], this.data);
+            }
+            
+            setValue(path, value) {
+                const parts = path.split('.');
+                const last = parts.pop();
+                const target = parts.reduce((o, i) => o[i], this.data);
+                target[last] = value;
+                this.saveData(); // Trigger save
+            }
+
+            // Generic Field Builder
+            buildForm(container, fields) {
+                const wrapper = document.createElement('div');
+                wrapper.className = 'glass-panel p-6 rounded-xl space-y-4';
+                
+                fields.forEach(field => {
+                    if(field.type === 'group') {
+                        const group = document.createElement('div');
+                        group.className = 'grid grid-cols-2 gap-4';
+                        field.fields.forEach(subField => group.appendChild(this.createInput(subField)));
+                        wrapper.appendChild(group);
+                    } else {
+                        wrapper.appendChild(this.createInput(field));
+                    }
+                });
+                container.appendChild(wrapper);
+            }
+
+            createInput(config) {
+                const div = document.createElement('div');
+                div.className = 'space-y-1';
+                
+                const label = document.createElement('label');
+                label.className = 'label-text';
+                label.innerText = config.label;
+                div.appendChild(label);
+
+                let input;
+                const value = this.getValue(config.path);
+
+                if (config.type === 'textarea') {
+                    input = document.createElement('textarea');
+                    input.rows = config.rows || 3;
+                    input.className = 'input-field h-auto';
+                    input.value = value || '';
+                } else if (config.type === 'select') {
+                    input = document.createElement('select');
+                    input.className = 'input-field appearance-none';
+                    config.options.forEach(opt => {
+                        const option = document.createElement('option');
+                        option.value = opt;
+                        option.text = opt.charAt(0).toUpperCase() + opt.slice(1);
+                        option.selected = value === opt;
+                        input.appendChild(option);
+                    });
+                } else if (config.type === 'checkbox') {
+                    input = document.createElement('input');
+                    input.type = 'checkbox';
+                    input.checked = value;
+                    input.className = 'w-5 h-5 rounded border-gray-600 text-neon-primary focus:ring-neon-primary bg-neon-dark';
+                    div.className = 'flex items-center gap-3 pt-4';
+                    div.innerHTML = ''; // Clear label
+                    div.appendChild(input);
+                    div.appendChild(label);
+                } else {
+                    input = document.createElement('input');
+                    input.type = config.type || 'text';
+                    input.className = 'input-field';
+                    input.value = value || '';
+                }
+
+                // Bind Event
+                input.addEventListener('input', (e) => {
+                    const val = config.type === 'checkbox' ? e.target.checked : e.target.value;
+                    this.setValue(config.path, val);
+                });
+
+                if(config.type !== 'checkbox') div.appendChild(input);
+                return div;
+            }
+
+            // Array List Builder (For Services, Stats, etc.)
+            buildList(container, path, schema, title = 'Items') {
+                const listWrapper = document.createElement('div');
+                listWrapper.className = 'glass-panel p-6 rounded-xl space-y-4';
+                
+                const header = document.createElement('div');
+                header.className = 'flex justify-between items-center border-b border-white/10 pb-4';
+                header.innerHTML = `
+                    <h3 class="font-bold text-white">${title}</h3>
+                    <button class="btn-primary text-xs px-3 py-1.5" id="add-btn-${path}">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg> Add Item
+                    </button>
+                `;
+                listWrapper.appendChild(header);
+
+                const itemsContainer = document.createElement('div');
+                itemsContainer.className = 'space-y-4';
+                
+                const items = this.getValue(path);
+
+                const renderItems = () => {
+                    itemsContainer.innerHTML = '';
+                    items.forEach((item, index) => {
+                        const itemRow = document.createElement('div');
+                        itemRow.className = 'bg-black/20 p-4 rounded-lg border border-white/5 relative group transition-all hover:border-white/20';
+                        
+                        const grid = document.createElement('div');
+                        grid.className = `grid gap-4 ${schema.length > 2 ? 'grid-cols-1 md:grid-cols-2' : 'grid-cols-1'}`;
+
+                        schema.forEach(field => {
+                            const fieldWrapper = document.createElement('div');
+                            fieldWrapper.innerHTML = `<label class="label-text text-[10px]">${field.label}</label>`;
+                            
+                            let input;
+                            if (field.type === 'textarea') {
+                                input = document.createElement('textarea');
+                                input.className = 'input-field text-sm py-1 h-auto';
+                                input.rows = 2;
+                            } else if (field.type === 'select') {
+                                input = document.createElement('select');
+                                input.className = 'input-field text-sm py-1';
+                                field.options.forEach(opt => {
+                                    input.innerHTML += `<option value="${opt}" ${item[field.key] === opt ? 'selected' : ''}>${opt}</option>`;
+                                });
+                            } else {
+                                input = document.createElement('input');
+                                input.className = 'input-field text-sm py-1';
+                                input.type = field.type || 'text';
+                            }
+                            input.value = item[field.key] || '';
+                            
+                            // Binding
+                            input.addEventListener('input', (e) => {
+                                item[field.key] = e.target.value;
+                                this.saveData();
+                            });
+
+                            fieldWrapper.appendChild(input);
+                            grid.appendChild(fieldWrapper);
+                        });
+
+                        itemRow.appendChild(grid);
+
+                        // Actions (Delete / Move)
+                        const actions = document.createElement('div');
+                        actions.className = 'flex gap-2 mt-3 justify-end opacity-60 group-hover:opacity-100 transition-opacity';
+                        
+                        const moveUp = document.createElement('button');
+                        moveUp.innerHTML = '↑';
+                        moveUp.className = 'p-1 hover:text-white';
+                        moveUp.onclick = () => {
+                            if(index > 0) {
+                                [items[index], items[index-1]] = [items[index-1], items[index]];
+                                this.saveData();
+                                renderItems();
+                            }
+                        };
+
+                        const moveDown = document.createElement('button');
+                        moveDown.innerHTML = '↓';
+                        moveDown.className = 'p-1 hover:text-white';
+                        moveDown.onclick = () => {
+                            if(index < items.length - 1) {
+                                [items[index], items[index+1]] = [items[index+1], items[index]];
+                                this.saveData();
+                                renderItems();
+                            }
+                        };
+
+                        const delBtn = document.createElement('button');
+                        delBtn.className = 'btn-danger ml-2';
+                        delBtn.innerText = 'Remove';
+                        delBtn.onclick = () => {
+                            items.splice(index, 1);
+                            this.saveData();
+                            renderItems();
+                        };
+
+                        actions.append(moveUp, moveDown, delBtn);
+                        itemRow.appendChild(actions);
+                        itemsContainer.appendChild(itemRow);
+                    });
+                };
+
+                renderItems();
+                listWrapper.appendChild(itemsContainer);
+                container.appendChild(listWrapper);
+
+                // Add Button Logic
+                header.querySelector(`#add-btn-${path}`).addEventListener('click', () => {
+                    const newItem = {};
+                    schema.forEach(f => newItem[f.key] = '');
+                    // Default logic for icon if exists
+                    if(schema.find(s => s.key === 'icon')) newItem.icon = 'spark';
+                    
+                    items.push(newItem);
+                    this.saveData();
+                    renderItems();
+                });
+            }
+
+            // Simple String Array Builder (for Values)
+            buildSimpleList(container, path, title) {
+                const listWrapper = document.createElement('div');
+                listWrapper.className = 'glass-panel p-6 rounded-xl space-y-4';
+                
+                const header = document.createElement('div');
+                header.className = 'flex justify-between items-center border-b border-white/10 pb-4';
+                header.innerHTML = `<h3 class="font-bold text-white">${title}</h3><button class="btn-primary text-xs px-3 py-1.5 add-simple">Add</button>`;
+                listWrapper.appendChild(header);
+
+                const itemsContainer = document.createElement('div');
+                itemsContainer.className = 'flex flex-wrap gap-2';
+                
+                const items = this.getValue(path);
+
+                const render = () => {
+                    itemsContainer.innerHTML = '';
+                    items.forEach((txt, idx) => {
+                        const chip = document.createElement('div');
+                        chip.className = 'flex items-center gap-2 bg-neon-dark border border-white/20 rounded-full px-3 py-1';
+                        
+                        const input = document.createElement('input');
+                        input.className = 'bg-transparent border-none focus:outline-none text-sm w-24 text-center';
+                        input.value = txt;
+                        input.addEventListener('change', (e) => {
+                            items[idx] = e.target.value;
+                            this.saveData();
+                        });
+
+                        const x = document.createElement('button');
+                        x.innerHTML = '&times;';
+                        x.className = 'text-red-400 hover:text-white font-bold';
+                        x.onclick = () => {
+                            items.splice(idx, 1);
+                            this.saveData();
+                            render();
+                        }
+                        
+                        chip.append(input, x);
+                        itemsContainer.appendChild(chip);
+                    });
+                }
+                render();
+                listWrapper.appendChild(itemsContainer);
+                container.appendChild(listWrapper);
+
+                header.querySelector('.add-simple').onclick = () => {
+                    items.push("New Item");
+                    this.saveData();
+                    render();
+                };
+            }
+        }
+
+        // Initialize App
+        const cmsApp = new CMS();
+    </script>
+</body>
+</html>

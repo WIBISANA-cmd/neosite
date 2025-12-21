@@ -1,0 +1,477 @@
+/* eslint-disable @next/next/no-img-element */
+"use client";
+
+import { useEffect, useMemo, useRef, useState } from "react";
+import { CMSData, defaultCmsData, FAQItem, FooterLink, HeroStat, NavLink, ServiceItem, Testimonial, TimelineStep, WorkItem } from "../../lib/cmsDefaults";
+
+type ListEditorProps<T> = {
+  title: string;
+  items: T[];
+  onChange: (items: T[]) => void;
+  renderItem: (item: T, update: (next: Partial<T> | T) => void, idx: number) => JSX.Element;
+  addItem: () => T;
+};
+
+function ListEditor<T>({ title, items, onChange, renderItem, addItem }: ListEditorProps<T>) {
+  const handleUpdate = (idx: number, next: Partial<T> | T) => {
+    const cloned: any[] = structuredClone(items);
+    const current = cloned[idx];
+    cloned[idx] =
+      typeof current === "object" && current !== null && typeof next === "object"
+        ? { ...current, ...next }
+        : next;
+    onChange(cloned as T[]);
+  };
+
+  return (
+    <div className="glass-card p-4 rounded-2xl space-y-4 border border-white/5">
+      <div className="flex items-center justify-between">
+        <h4 className="font-semibold text-white">{title}</h4>
+        <button className="btn-secondary px-3 py-1 text-sm" onClick={() => onChange([...items, addItem()])}>
+          Add
+        </button>
+      </div>
+      <div className="space-y-4">
+        {items.map((item, idx) => (
+          <div key={idx} className="border border-white/10 rounded-xl p-3 space-y-3">
+            <div className="flex items-center justify-between text-sm text-gray-400">
+              <span>
+                Item {idx + 1}
+              </span>
+              <button
+                className="btn-danger"
+                onClick={() => onChange(items.filter((_, i) => i !== idx))}
+              >
+                Remove
+              </button>
+            </div>
+            {renderItem(item, (next) => handleUpdate(idx, next), idx)}
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+const Input = ({
+  label,
+  value,
+  onChange,
+  type = "text",
+  textarea,
+  rows = 3,
+}: {
+  label: string;
+  value: string | number;
+  onChange: (val: string) => void;
+  type?: string;
+  textarea?: boolean;
+  rows?: number;
+}) => (
+  <label className="space-y-1 block">
+    <span className="label-text text-gray-400">{label}</span>
+    {textarea ? (
+      <textarea
+        className="input-field min-h-[120px]"
+        value={value}
+        rows={rows}
+        onChange={(e) => onChange(e.target.value)}
+      />
+    ) : (
+      <input className="input-field" type={type} value={value} onChange={(e) => onChange(e.target.value)} />
+    )}
+  </label>
+);
+
+const SectionCard = ({ title, children }: { title: string; children: React.ReactNode }) => (
+  <div className="glass-card p-6 rounded-2xl border border-white/5 space-y-4">
+    <h3 className="text-xl font-semibold text-white">{title}</h3>
+    {children}
+  </div>
+);
+
+const STORAGE_KEY = "neosite_cms_data";
+
+export default function AdminPage() {
+  const [data, setData] = useState<CMSData>(defaultCmsData);
+  const [active, setActive] = useState<keyof CMSData>("global");
+  const [status, setStatus] = useState("All changes saved");
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
+
+  useEffect(() => {
+    const stored = typeof window !== "undefined" ? localStorage.getItem(STORAGE_KEY) : null;
+    if (stored) {
+      try {
+        setData(JSON.parse(stored));
+      } catch {
+        // ignore corrupted storage
+      }
+    }
+  }, []);
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    setStatus("Saving...");
+    const timeout = setTimeout(() => {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+      setStatus("All changes saved");
+    }, 400);
+    return () => clearTimeout(timeout);
+  }, [data]);
+
+  const sectionTitle = useMemo(
+    () => ({
+      global: "Global Settings",
+      navbar: "Navigation Bar",
+      hero: "Hero Section",
+      services: "Services",
+      works: "Portfolio & Works",
+      about: "About & Values",
+      timeline: "Timeline",
+      testimonials: "Testimonials",
+      faq: "FAQ",
+      contact: "Contact",
+      footer: "Footer",
+      seo: "SEO",
+    }),
+    []
+  );
+
+  const update = (updater: (draft: CMSData) => void) => {
+    setData((prev) => {
+      const next = structuredClone(prev);
+      updater(next);
+      return next;
+    });
+  };
+
+  const downloadJson = () => {
+    const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(data, null, 2));
+    const anchor = document.createElement("a");
+    anchor.setAttribute("href", dataStr);
+    anchor.setAttribute("download", "neosite_cms_export.json");
+    anchor.click();
+  };
+
+  const handleImport = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = (ev) => {
+      try {
+        const json = JSON.parse(ev.target?.result as string);
+        if (!json.global) throw new Error("Invalid");
+        setData(json);
+      } catch (err) {
+        alert("Invalid JSON file");
+      }
+    };
+    reader.readAsText(file);
+    e.target.value = "";
+  };
+
+  const resetData = () => {
+    if (confirm("Reset CMS data to defaults?")) setData(defaultCmsData);
+  };
+
+  return (
+    <div className="min-h-screen bg-neon-dark text-gray-200">
+      <div className="flex h-screen">
+        <aside className="w-64 glass-card border-r border-white/5 p-4 space-y-4 overflow-y-auto">
+          <div className="flex items-center gap-2 font-display font-bold text-xl tracking-wide text-white">
+            <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-neon-secondary to-neon-primary flex items-center justify-center text-neon-dark">
+              N
+            </div>
+            CMS
+          </div>
+          <nav className="space-y-1">
+            {(Object.keys(sectionTitle) as Array<keyof CMSData>).map((key) => (
+              <button
+                key={key}
+                onClick={() => setActive(key)}
+                className={`sidebar-link w-full text-left ${active === key ? "active" : ""}`}
+              >
+                {sectionTitle[key]}
+              </button>
+            ))}
+          </nav>
+        </aside>
+
+        <div className="flex-1 flex flex-col">
+          <header className="glass-card h-16 border-b border-white/5 flex items-center justify-between px-4">
+            <div className="flex items-center gap-3">
+              <h2 className="text-xl font-display text-white">{sectionTitle[active]}</h2>
+              <span className="text-xs text-gray-500">{status}</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <button className="btn-secondary text-xs px-3 py-1.5" onClick={downloadJson}>
+                Export JSON
+              </button>
+              <button
+                className="btn-secondary text-xs px-3 py-1.5"
+                onClick={() => fileInputRef.current?.click()}
+              >
+                Import JSON
+              </button>
+              <button className="btn-danger text-xs px-3 py-1.5" onClick={resetData}>
+                Reset
+              </button>
+              <input ref={fileInputRef} type="file" accept=".json" className="hidden" onChange={handleImport} />
+            </div>
+          </header>
+
+          <main className="flex-1 overflow-y-auto p-6 space-y-6">
+            {active === "global" && (
+              <SectionCard title="Global">
+                <div className="grid md:grid-cols-2 gap-4">
+                  <Input label="Brand Name" value={data.global.brandName} onChange={(v) => update((d) => (d.global.brandName = v))} />
+                  <Input label="Tagline" value={data.global.tagline} onChange={(v) => update((d) => (d.global.tagline = v))} />
+                  <Input label="Accent" value={data.global.accent} onChange={(v) => update((d) => (d.global.accent = v))} />
+                  <Input label="Email" value={data.global.email} onChange={(v) => update((d) => (d.global.email = v))} />
+                  <Input label="Address" value={data.global.address} onChange={(v) => update((d) => (d.global.address = v))} />
+                  <Input label="Twitter" value={data.global.social.twitter} onChange={(v) => update((d) => (d.global.social.twitter = v))} />
+                  <Input label="LinkedIn" value={data.global.social.linkedin} onChange={(v) => update((d) => (d.global.social.linkedin = v))} />
+                  <Input label="Instagram" value={data.global.social.instagram} onChange={(v) => update((d) => (d.global.social.instagram = v))} />
+                </div>
+              </SectionCard>
+            )}
+
+            {active === "navbar" && (
+              <div className="space-y-4">
+                <SectionCard title="Navbar Buttons">
+                  <div className="grid md:grid-cols-3 gap-4">
+                    <Input label="CTA Text" value={data.navbar.ctaText} onChange={(v) => update((d) => (d.navbar.ctaText = v))} />
+                    <Input label="CTA Link" value={data.navbar.ctaLink} onChange={(v) => update((d) => (d.navbar.ctaLink = v))} />
+                    <Input label="Sign In Text" value={data.navbar.signInText || ""} onChange={(v) => update((d) => (d.navbar.signInText = v))} />
+                  </div>
+                </SectionCard>
+                <ListEditor<NavLink>
+                  title="Nav Links"
+                  items={data.navbar.links}
+                  onChange={(items) => update((d) => (d.navbar.links = items))}
+                  addItem={() => ({ label: "New Link", href: "#hero" })}
+                  renderItem={(item, updateItem) => (
+                    <div className="grid md:grid-cols-2 gap-3">
+                      <Input label="Label" value={item.label} onChange={(v) => updateItem({ label: v })} />
+                      <Input label="Href (#id)" value={item.href} onChange={(v) => updateItem({ href: v })} />
+                    </div>
+                  )}
+                />
+              </div>
+            )}
+
+            {active === "hero" && (
+              <div className="space-y-4">
+                <SectionCard title="Hero Copy">
+                  <div className="grid gap-4">
+                    <Input label="Headline" value={data.hero.headline} textarea onChange={(v) => update((d) => (d.hero.headline = v))} />
+                    <Input label="Subheadline" value={data.hero.subheadline} textarea onChange={(v) => update((d) => (d.hero.subheadline = v))} />
+                    <div className="grid md:grid-cols-2 gap-4">
+                      <Input label="Primary CTA" value={data.hero.ctaPrimary} onChange={(v) => update((d) => (d.hero.ctaPrimary = v))} />
+                      <Input label="Secondary CTA" value={data.hero.ctaSecondary} onChange={(v) => update((d) => (d.hero.ctaSecondary = v))} />
+                    </div>
+                  </div>
+                </SectionCard>
+                <ListEditor<HeroStat>
+                  title="Stats"
+                  items={data.hero.stats}
+                  onChange={(items) => update((d) => (d.hero.stats = items))}
+                  addItem={() => ({ value: "0", label: "Label" })}
+                  renderItem={(item, updateItem) => (
+                    <div className="grid md:grid-cols-2 gap-3">
+                      <Input label="Value" value={item.value} onChange={(v) => updateItem({ value: v })} />
+                      <Input label="Label" value={item.label} onChange={(v) => updateItem({ label: v })} />
+                    </div>
+                  )}
+                />
+              </div>
+            )}
+
+            {active === "services" && (
+              <div className="space-y-4">
+                <SectionCard title="Services Header">
+                  <div className="grid md:grid-cols-2 gap-4">
+                    <Input label="Title" value={data.services.title} onChange={(v) => update((d) => (d.services.title = v))} />
+                    <Input label="Filters (comma separated keys)" value={data.services.filters} onChange={(v) => update((d) => (d.services.filters = v))} />
+                    <Input label="Description" value={data.services.description} textarea onChange={(v) => update((d) => (d.services.description = v))} />
+                  </div>
+                </SectionCard>
+                <ListEditor<ServiceItem>
+                  title="Service Cards"
+                  items={data.services.items}
+                  onChange={(items) => update((d) => (d.services.items = items))}
+                  addItem={() => ({ title: "New Service", icon: "code", desc: "Description", category: "development" })}
+                  renderItem={(item, updateItem) => (
+                    <div className="grid md:grid-cols-2 gap-3">
+                      <Input label="Title" value={item.title} onChange={(v) => updateItem({ title: v })} />
+                      <Input label="Category Key" value={item.category} onChange={(v) => updateItem({ category: v })} />
+                      <Input label="Icon" value={item.icon} onChange={(v) => updateItem({ icon: v })} />
+                      <Input label="Description" value={item.desc} textarea onChange={(v) => updateItem({ desc: v })} />
+                    </div>
+                  )}
+                />
+              </div>
+            )}
+
+            {active === "works" && (
+              <div className="space-y-4">
+                <SectionCard title="Works Header">
+                  <div className="grid md:grid-cols-2 gap-4">
+                    <Input label="Title" value={data.works.title} onChange={(v) => update((d) => (d.works.title = v))} />
+                    <Input label="Description" value={data.works.description} textarea onChange={(v) => update((d) => (d.works.description = v))} />
+                  </div>
+                </SectionCard>
+                <ListEditor<WorkItem>
+                  title="Portfolio Items"
+                  items={data.works.items}
+                  onChange={(items) => update((d) => (d.works.items = items))}
+                  addItem={() => ({
+                    title: "New Project",
+                    category: "saas",
+                    desc: "Description",
+                    tags: "Tech",
+                    img: "https://source.unsplash.com/random/800x600?technology",
+                  })}
+                  renderItem={(item, updateItem) => (
+                    <div className="grid md:grid-cols-2 gap-3">
+                      <Input label="Title" value={item.title} onChange={(v) => updateItem({ title: v })} />
+                      <Input label="Category" value={item.category} onChange={(v) => updateItem({ category: v })} />
+                      <Input label="Description" value={item.desc} textarea onChange={(v) => updateItem({ desc: v })} />
+                      <Input label="Tags" value={item.tags} onChange={(v) => updateItem({ tags: v })} />
+                      <Input label="Image URL" value={item.img} onChange={(v) => updateItem({ img: v })} />
+                    </div>
+                  )}
+                />
+              </div>
+            )}
+
+            {active === "about" && (
+              <div className="space-y-4">
+                <SectionCard title="About Content">
+                  <div className="grid gap-4">
+                    <Input label="Title" value={data.about.title} onChange={(v) => update((d) => (d.about.title = v))} />
+                    <Input label="Content" value={data.about.content} textarea rows={5} onChange={(v) => update((d) => (d.about.content = v))} />
+                  </div>
+                </SectionCard>
+                <ListEditor<string>
+                  title="Values"
+                  items={data.about.values}
+                  onChange={(items) => update((d) => (d.about.values = items))}
+                  addItem={() => "New Value"}
+                  renderItem={(item, updateItem) => (
+                    <Input label="Value" value={item} onChange={(v) => updateItem(v)} />
+                  )}
+                />
+              </div>
+            )}
+
+            {active === "timeline" && (
+              <ListEditor<TimelineStep>
+                title="Timeline Steps"
+                items={data.timeline.steps}
+                onChange={(items) => update((d) => (d.timeline.steps = items))}
+                addItem={() => ({ title: "New Step", desc: "Description" })}
+                renderItem={(item, updateItem) => (
+                  <div className="grid md:grid-cols-2 gap-3">
+                    <Input label="Title" value={item.title} onChange={(v) => updateItem({ title: v })} />
+                    <Input label="Description" value={item.desc} textarea onChange={(v) => updateItem({ desc: v })} />
+                  </div>
+                )}
+              />
+            )}
+
+            {active === "testimonials" && (
+              <div className="space-y-4">
+                <SectionCard title="Testimonials Header">
+                  <Input label="Title" value={data.testimonials.title} onChange={(v) => update((d) => (d.testimonials.title = v))} />
+                </SectionCard>
+                <ListEditor<Testimonial>
+                  title="Testimonials"
+                  items={data.testimonials.items}
+                  onChange={(items) => update((d) => (d.testimonials.items = items))}
+                  addItem={() => ({ name: "Client", role: "Role", message: "Message", rating: 5 })}
+                  renderItem={(item, updateItem) => (
+                    <div className="grid md:grid-cols-2 gap-3">
+                      <Input label="Name" value={item.name} onChange={(v) => updateItem({ name: v })} />
+                      <Input label="Role" value={item.role} onChange={(v) => updateItem({ role: v })} />
+                      <Input label="Message" value={item.message} textarea onChange={(v) => updateItem({ message: v })} />
+                      <Input
+                        label="Rating"
+                        value={item.rating}
+                        type="number"
+                        onChange={(v) => updateItem({ rating: Number(v) || 0 })}
+                      />
+                    </div>
+                  )}
+                />
+              </div>
+            )}
+
+            {active === "faq" && (
+              <ListEditor<FAQItem>
+                title="FAQ Items"
+                items={data.faq.items}
+                onChange={(items) => update((d) => (d.faq.items = items))}
+                addItem={() => ({ q: "New Question", a: "Answer" })}
+                renderItem={(item, updateItem) => (
+                  <div className="grid gap-3">
+                    <Input label="Question" value={item.q} onChange={(v) => updateItem({ q: v })} />
+                    <Input label="Answer" value={item.a} textarea onChange={(v) => updateItem({ a: v })} />
+                  </div>
+                )}
+              />
+            )}
+
+            {active === "contact" && (
+              <SectionCard title="Contact">
+                <div className="grid md:grid-cols-2 gap-4">
+                  <Input label="Heading" value={data.contact.heading} onChange={(v) => update((d) => (d.contact.heading = v))} />
+                  <Input label="Recipient" value={data.contact.emailRecipient} onChange={(v) => update((d) => (d.contact.emailRecipient = v))} />
+                  <Input label="Success Message" value={data.contact.successMessage} onChange={(v) => update((d) => (d.contact.successMessage = v))} />
+                </div>
+              </SectionCard>
+            )}
+
+            {active === "footer" && (
+              <div className="space-y-4">
+                <SectionCard title="Footer">
+                  <Input label="Copyright" value={data.footer.copyright} onChange={(v) => update((d) => (d.footer.copyright = v))} />
+                </SectionCard>
+                <ListEditor<FooterLink>
+                  title="Footer Links"
+                  items={data.footer.links}
+                  onChange={(items) => update((d) => (d.footer.links = items))}
+                  addItem={() => ({ label: "Link", href: "#" })}
+                  renderItem={(item, updateItem) => (
+                    <div className="grid md:grid-cols-2 gap-3">
+                      <Input label="Label" value={item.label} onChange={(v) => updateItem({ label: v })} />
+                      <Input label="Href" value={item.href} onChange={(v) => updateItem({ href: v })} />
+                    </div>
+                  )}
+                />
+              </div>
+            )}
+
+            {active === "seo" && (
+              <SectionCard title="SEO">
+                <div className="grid md:grid-cols-2 gap-4">
+                  <Input label="Title" value={data.seo.title} onChange={(v) => update((d) => (d.seo.title = v))} />
+                  <Input label="Description" value={data.seo.description} textarea onChange={(v) => update((d) => (d.seo.description = v))} />
+                  <label className="flex items-center gap-2 text-sm text-gray-300">
+                    <input
+                      type="checkbox"
+                      className="h-4 w-4"
+                      checked={data.seo.robotsIndex}
+                      onChange={(e) => update((d) => (d.seo.robotsIndex = e.target.checked))}
+                    />
+                    Allow indexing
+                  </label>
+                </div>
+              </SectionCard>
+            )}
+          </main>
+        </div>
+      </div>
+    </div>
+  );
+}
