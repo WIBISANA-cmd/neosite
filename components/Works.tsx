@@ -13,7 +13,7 @@ export function Works({ title, description, items }: Props) {
   const firstWords = titleWords.join(" ");
   return (
     <>
-      <section id="works" className="section-padding bg-neon-dark/50 relative">
+      <section id="works" className="section-padding bg-neon-dark/50 relative horizontal-panel">
         <div className="container mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
           <div className="text-center mb-16 reveal-hidden">
             <h2 className="text-4xl font-bold mb-4">

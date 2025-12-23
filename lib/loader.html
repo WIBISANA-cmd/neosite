@@ -1,0 +1,322 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NeoSite • System Initialization</title>
+    <meta name="description" content="NeoSite loading interface">
+
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;700&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Space Grotesk', 'sans-serif'],
+                        mono: ['Share Tech Mono', 'monospace'],
+                    },
+                    colors: {
+                        neo: {
+                            bg: '#020617', // Slate 950
+                            cyan: '#06b6d4', // Cyan 500
+                            glow: '#22d3ee', // Cyan 400
+                            dark: '#0f172a', // Slate 900
+                        }
+                    },
+                    animation: {
+                        'spin-slow': 'spin 3s linear infinite',
+                        'spin-reverse': 'spin 2s linear infinite reverse',
+                        'pulse-fast': 'pulse 1.5s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+                        'glitch': 'glitch 1s linear infinite',
+                    },
+                    keyframes: {
+                        glitch: {
+                            '2%, 64%': { transform: 'translate(2px,0) skew(0deg)' },
+                            '4%, 60%': { transform: 'translate(-2px,0) skew(0deg)' },
+                            '62%': { transform: 'translate(0,0) skew(5deg)' },
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        /* CSS-ONLY FX */
+        body {
+            background-color: #020617;
+            color: white;
+            overflow: hidden; /* Prevent scroll during load */
+        }
+
+        /* 1. Grid Background */
+        .tech-grid {
+            background-size: 40px 40px;
+            background-image:
+                linear-gradient(to right, rgba(6, 182, 212, 0.05) 1px, transparent 1px),
+                linear-gradient(to bottom, rgba(6, 182, 212, 0.05) 1px, transparent 1px);
+            mask-image: radial-gradient(circle at center, black 0%, transparent 80%);
+        }
+
+        /* 2. Scanline Overlay */
+        .scanlines {
+            background: linear-gradient(
+                to bottom,
+                rgba(255,255,255,0),
+                rgba(255,255,255,0) 50%,
+                rgba(0,0,0,0.2) 50%,
+                rgba(0,0,0,0.2)
+            );
+            background-size: 100% 4px;
+            pointer-events: none;
+            z-index: 40;
+        }
+
+        /* 3. Glow Utilities */
+        .neon-shadow {
+            box-shadow: 0 0 10px rgba(6, 182, 212, 0.5), 
+                        0 0 20px rgba(6, 182, 212, 0.3);
+        }
+        .neon-text {
+            text-shadow: 0 0 5px rgba(6, 182, 212, 0.8), 
+                         0 0 10px rgba(6, 182, 212, 0.4);
+        }
+
+        /* 4. Glitch Effect Wrapper */
+        .glitch-wrapper {
+            position: relative;
+        }
+        .glitch-wrapper::before,
+        .glitch-wrapper::after {
+            content: attr(data-text);
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            opacity: 0.8;
+        }
+        .glitch-wrapper::before {
+            color: #0ff;
+            z-index: -1;
+            animation: glitch 3s cubic-bezier(0.25, 0.46, 0.45, 0.94) both infinite;
+        }
+        .glitch-wrapper::after {
+            color: #f0f;
+            z-index: -2;
+            animation: glitch 3s cubic-bezier(0.25, 0.46, 0.45, 0.94) reverse both infinite;
+        }
+
+        /* Accessibility: Reduced Motion */
+        @media (prefers-reduced-motion: reduce) {
+            .animate-spin-slow, 
+            .animate-spin-reverse, 
+            .animate-pulse-fast,
+            .glitch-wrapper::before,
+            .glitch-wrapper::after {
+                animation: none !important;
+                transform: none !important;
+            }
+        }
+
+        /* Content Reveal Transition */
+        #main-content {
+            opacity: 0;
+            transform: scale(0.98);
+            transition: opacity 1s ease-out, transform 1s ease-out;
+            filter: blur(10px);
+        }
+        #main-content.visible {
+            opacity: 1;
+            transform: scale(1);
+            filter: blur(0);
+        }
+        
+        /* Loader Exit Transition */
+        #preloader.fade-out {
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.8s ease-in-out;
+        }
+    </style>
+</head>
+<body class="antialiased selection:bg-neo-cyan selection:text-neo-bg">
+
+    <div id="preloader" class="fixed inset-0 z-50 flex flex-col items-center justify-center bg-neo-bg">
+        
+        <div class="absolute inset-0 tech-grid opacity-50"></div>
+        <div class="absolute inset-0 scanlines opacity-30"></div>
+        <div class="absolute inset-0 bg-[radial-gradient(circle_at_center,transparent_0%,#020617_90%)]"></div>
+
+        <div class="relative z-10 flex flex-col items-center justify-center gap-8 p-4">
+
+            <div class="relative w-32 h-32 sm:w-40 sm:h-40 flex items-center justify-center">
+                <div class="absolute inset-0 rounded-full border border-neo-cyan/20 border-t-neo-cyan shadow-[0_0_15px_rgba(6,182,212,0.2)] animate-spin-slow"></div>
+                
+                <div class="absolute inset-2 rounded-full border-2 border-dashed border-neo-cyan/40 animate-spin-reverse opacity-70"></div>
+                
+                <div class="absolute inset-4 rounded-full border border-white/5"></div>
+
+                <div class="absolute w-12 h-12 bg-neo-cyan rounded-full blur-md opacity-80 animate-pulse-fast"></div>
+                <div class="absolute w-8 h-8 bg-white rounded-full blur-sm opacity-90 animate-pulse-fast"></div>
+            </div>
+
+            <div class="text-center space-y-2">
+                <h1 class="text-4xl md:text-5xl font-bold tracking-tight text-white glitch-wrapper" data-text="NEOSITE">
+                    NEOSITE
+                </h1>
+                
+                <div class="flex items-center justify-center gap-2 text-neo-cyan font-mono text-sm tracking-widest uppercase">
+                    <span id="loading-text">Initializing Systems</span>
+                    <span class="animate-pulse">_</span>
+                </div>
+            </div>
+
+            <div class="w-64 space-y-2">
+                <div class="flex justify-between text-xs font-mono text-slate-400">
+                    <span>LOADING_ASSETS...</span>
+                    <span id="progress-count" class="text-neo-cyan font-bold">0%</span>
+                </div>
+                <div class="h-1 w-full bg-slate-800 overflow-hidden relative">
+                    <div id="progress-bar" class="absolute top-0 left-0 h-full bg-neo-cyan shadow-[0_0_10px_rgba(6,182,212,0.8)] w-0 transition-all duration-75 ease-out"></div>
+                </div>
+            </div>
+
+        </div>
+
+        <div class="absolute bottom-8 text-xs text-slate-600 font-mono tracking-[0.2em] opacity-50">
+            SECURE CONNECTION ESTABLISHED // V2.0.4
+        </div>
+    </div>
+
+
+    <main id="main-content" class="relative min-h-screen flex items-center justify-center p-8">
+        <div class="absolute inset-0 tech-grid opacity-30 pointer-events-none -z-10"></div>
+        <div class="absolute inset-0 scanlines opacity-10 pointer-events-none -z-10"></div>
+        
+        <div class="max-w-4xl w-full text-center space-y-6">
+            <div class="inline-block px-3 py-1 mb-4 border border-neo-cyan/30 rounded-full bg-neo-cyan/5 text-neo-cyan text-xs font-mono tracking-wider">
+                SYSTEM READY
+            </div>
+            <h2 class="text-5xl md:text-7xl font-bold text-white tracking-tight">
+                Future <span class="text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-blue-600">Architects</span>
+            </h2>
+            <p class="text-slate-400 text-lg md:text-xl max-w-2xl mx-auto">
+                Welcome to the interface. The preloader has successfully calibrated the viewport. 
+                Experience the next generation of web interaction.
+            </p>
+            <div class="pt-8 flex justify-center gap-4">
+                <button class="px-8 py-3 bg-neo-cyan text-neo-bg font-bold rounded hover:shadow-[0_0_20px_rgba(6,182,212,0.6)] transition-all">
+                    Enter System
+                </button>
+            </div>
+        </div>
+    </main>
+
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            // Configuration
+            const DURATION = 3500; // Total load time in ms
+            const STEPS = [
+                { percent: 15, text: "Initializing Core..." },
+                { percent: 40, text: "Loading 3D Modules..." },
+                { percent: 70, text: "Optimizing Shaders..." },
+                { percent: 90, text: "Finalizing UI..." },
+                { percent: 100, text: "System Ready." }
+            ];
+
+            // DOM Elements
+            const preloader = document.getElementById('preloader');
+            const mainContent = document.getElementById('main-content');
+            const progressBar = document.getElementById('progress-bar');
+            const progressCount = document.getElementById('progress-count');
+            const loadingText = document.getElementById('loading-text');
+
+            // State
+            let start = null;
+            let animationFrameId;
+
+            // Easing Function: Ease Out Cubic
+            // Makes the loading start fast and slow down at the end for a natural feel
+            function easeOutCubic(x) {
+                return 1 - Math.pow(1 - x, 3);
+            }
+
+            // Update Progress Loop
+            function step(timestamp) {
+                if (!start) start = timestamp;
+                const runtime = timestamp - start;
+                
+                // Calculate raw progress (0 to 1)
+                let relativeProgress = runtime / DURATION;
+                if (relativeProgress > 1) relativeProgress = 1;
+
+                // Apply easing
+                const easedProgress = easeOutCubic(relativeProgress);
+                const percentage = Math.floor(easedProgress * 100);
+
+                // Update DOM
+                progressBar.style.width = `${percentage}%`;
+                progressCount.innerText = `${percentage}%`;
+
+                // Update Status Text based on thresholds
+                const currentStep = STEPS.find(s => percentage <= s.percent);
+                if (currentStep && percentage < 100) {
+                    loadingText.innerText = currentStep.text;
+                } else if (percentage === 100) {
+                    loadingText.innerText = "Access Granted.";
+                    loadingText.classList.add("text-green-400"); // Success color
+                    progressCount.classList.add("text-green-400");
+                    progressBar.classList.replace("bg-neo-cyan", "bg-green-400");
+                    progressBar.classList.replace("shadow-[0_0_10px_rgba(6,182,212,0.8)]", "shadow-[0_0_10px_rgba(74,222,128,0.8)]");
+                }
+
+                // Check if finished
+                if (runtime < DURATION) {
+                    animationFrameId = requestAnimationFrame(step);
+                } else {
+                    finishLoading();
+                }
+            }
+
+            // Cleanup and Transition
+            function finishLoading() {
+                // 1. Add fade-out class to preloader
+                preloader.classList.add('fade-out');
+                
+                // 2. Unlock body scroll
+                document.body.style.overflow = 'auto';
+
+                // 3. Reveal main content
+                setTimeout(() => {
+                    mainContent.classList.add('visible');
+                    
+                    // 4. Remove preloader from DOM entirely for performance
+                    setTimeout(() => {
+                        preloader.remove();
+                    }, 1000); // Wait for CSS transition to finish
+                }, 200); // Slight delay for smoothness
+            }
+
+            // Check for Reduced Motion Preference
+            const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+            if (prefersReducedMotion) {
+                // If reduced motion, skip animation and finish immediately
+                progressBar.style.width = '100%';
+                progressCount.innerText = '100%';
+                setTimeout(finishLoading, 500); // Short delay just to show interface briefly
+            } else {
+                // Start Animation Loop
+                animationFrameId = requestAnimationFrame(step);
+            }
+        });
+    </script>
+</body>
+</html>

@@ -30,7 +30,7 @@ export function Services({ title, description, filters, items }: Props) {
   const lastWord = titleWords.pop() || "";
   const firstWords = titleWords.join(" ");
   return (
-    <section id="services" className="section-padding relative">
+    <section id="services" className="section-padding relative horizontal-panel">
       <div className="container mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
         <div className="text-center mb-16 reveal-hidden">
           <h2 className="text-4xl font-bold mb-4">

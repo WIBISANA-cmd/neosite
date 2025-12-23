@@ -11,9 +11,13 @@ import { FAQ } from "../components/FAQ";
 import { Contact } from "../components/Contact";
 import { Footer } from "../components/Footer";
 import { useEffect, useMemo, useRef, useState } from "react";
+import { gsap } from "gsap";
+import { ScrollTrigger } from "gsap/ScrollTrigger";
+import { Loader } from "../components/Loader";
 import { defaultCmsData } from "../lib/cmsDefaults";
 
 export default function HomePage() {
+  const [loaderDone, setLoaderDone] = useState(false);
   const [cmsData, setCmsData] = useState(defaultCmsData);
   const successMessageRef = useRef(cmsData.contact.successMessage);
 
@@ -42,6 +46,8 @@ export default function HomePage() {
   );
 
   useEffect(() => {
+    if (!loaderDone) return;
+
     const throttle = (func: (...args: any[]) => void, limit: number) => {
       let inThrottle: ReturnType<typeof setTimeout> | null = null;
       return function (...args: any[]) {
@@ -53,6 +59,8 @@ export default function HomePage() {
         }
       };
     };
+
+    gsap.registerPlugin(ScrollTrigger);
 
     const navbar = document.getElementById("navbar");
     const mobileMenuBtn = document.getElementById("mobile-menu-btn");
@@ -71,20 +79,17 @@ export default function HomePage() {
     const modal = document.getElementById("portfolio-modal");
     const modalOverlay = document.getElementById("modal-overlay");
     const modalCloseBtn = document.getElementById("modal-close");
-    const slides = document.querySelectorAll<HTMLElement>(".testimonial-slide");
-    const dots = document.querySelectorAll<HTMLButtonElement>("#testimonial-dots button");
-    const prevBtn = document.getElementById("prev-slide");
-    const nextBtn = document.getElementById("next-slide");
-    const carouselContainer = document.getElementById("testimonial-carousel");
     const faqItems = document.querySelectorAll<HTMLElement>(".faq-item");
     const contactForm = document.getElementById("contact-form") as HTMLFormElement | null;
     const toastContainer = document.getElementById("toast-container");
     const backToTopBtn = document.getElementById("back-to-top");
+    const horizontalWrapper = document.getElementById("services-works-wrapper");
+    const horizontalTrack = document.getElementById("services-works-track");
     let isMenuOpen = false;
-    let slideInterval: ReturnType<typeof setInterval> | undefined;
     let statsObserver: IntersectionObserver | null = null;
     let revealObserver: IntersectionObserver | null = null;
     let activeSectionObserver: IntersectionObserver | null = null;
+    let horizontalCtx: gsap.Context | null = null;
 
     const toggleMenu = () => {
       isMenuOpen = !isMenuOpen;
@@ -122,6 +127,11 @@ export default function HomePage() {
       }
     }, 100);
     window.addEventListener("scroll", onScrollNavbar);
+    const onResizeHorizontal = throttle(() => {
+      setupHorizontalScroll();
+      ScrollTrigger.refresh();
+    }, 300);
+    window.addEventListener("resize", onResizeHorizontal);
 
     revealObserver = new IntersectionObserver(
       (entries, observer) => {
@@ -150,6 +160,62 @@ export default function HomePage() {
       { threshold: 0.5 }
     );
     sections.forEach((section) => activeSectionObserver?.observe(section));
+
+    const setupHorizontalScroll = () => {
+      if (!horizontalWrapper || !horizontalTrack) return;
+      if (window.innerWidth < 1024) {
+        horizontalCtx?.revert();
+        horizontalCtx = null;
+        ScrollTrigger.getById("services-works-horizontal")?.kill();
+        gsap.set(horizontalTrack, { x: 0 });
+        return;
+      }
+
+      if (horizontalCtx) {
+        ScrollTrigger.getById("services-works-horizontal")?.refresh();
+        return;
+      }
+
+      horizontalCtx = gsap.context(() => {
+        const totalScroll = () => Math.max(horizontalTrack.scrollWidth - window.innerWidth, 0);
+        gsap.to(horizontalTrack, {
+          x: () => -totalScroll(),
+          ease: "none",
+          scrollTrigger: {
+            id: "services-works-horizontal",
+            trigger: horizontalWrapper,
+            start: "top top",
+            end: () => `+=${totalScroll()}`,
+            pin: true,
+            scrub: 1,
+            anticipatePin: 1,
+            invalidateOnRefresh: true,
+          },
+        });
+      }, horizontalWrapper);
+      ScrollTrigger.refresh();
+    };
+
+    setupHorizontalScroll();
+
+    const handleNavClick = (event: Event) => {
+      const link = event.currentTarget as HTMLElement;
+      const href = link.getAttribute("href") || "";
+      if (!href.startsWith("#")) return;
+      const horizontalTrigger = ScrollTrigger.getById("services-works-horizontal");
+      const isHorizontalActive = horizontalTrigger && window.innerWidth >= 1024;
+      if (href === "#services" && isHorizontalActive && horizontalTrigger) {
+        event.preventDefault();
+        window.scrollTo({ top: horizontalTrigger.start, behavior: "smooth" });
+        return;
+      }
+      if (href === "#works" && isHorizontalActive && horizontalTrigger) {
+        event.preventDefault();
+        window.scrollTo({ top: horizontalTrigger.end, behavior: "smooth" });
+      }
+    };
+    navLinks.forEach((link) => link.addEventListener("click", handleNavClick));
+    mobileNavLinks.forEach((link) => link.addEventListener("click", handleNavClick));
 
     const startCountUp = (el: HTMLElement) => {
       const targetAttr = el.getAttribute("data-target") || "0";
@@ -279,60 +345,6 @@ export default function HomePage() {
     };
     document.addEventListener("keydown", onKeyDown);
 
-    let currentSlide = 0;
-    const showSlide = (index: number) => {
-      if (!slides.length) return;
-      slides.forEach((slide, i) => {
-        slide.classList.toggle("opacity-100", i === index);
-        slide.classList.toggle("opacity-0", i !== index);
-        slide.classList.toggle("translate-x-0", i === index);
-        slide.classList.toggle("translate-x-full", i > index);
-        slide.classList.toggle("-translate-x-full", i < index);
-      });
-      dots.forEach((dot, i) => {
-        dot.classList.toggle("bg-neon-primary", i === index);
-        dot.classList.toggle("bg-white/20", i !== index);
-      });
-      currentSlide = index;
-    };
-
-    const nextSlide = () => {
-      if (!slides.length) return;
-      showSlide((currentSlide + 1) % slides.length);
-    };
-    const prevSlideFn = () => {
-      if (!slides.length) return;
-      showSlide((currentSlide - 1 + slides.length) % slides.length);
-    };
-    const startSlideTimer = () => {
-      if (!slides.length) return;
-      slideInterval = setInterval(nextSlide, 5000);
-    };
-    const stopSlideTimer = () => {
-      if (slideInterval) clearInterval(slideInterval);
-    };
-
-    nextBtn?.addEventListener("click", () => {
-      nextSlide();
-      stopSlideTimer();
-      startSlideTimer();
-    });
-    prevBtn?.addEventListener("click", () => {
-      prevSlideFn();
-      stopSlideTimer();
-      startSlideTimer();
-    });
-    dots.forEach((dot, i) =>
-      dot.addEventListener("click", () => {
-        showSlide(i);
-        stopSlideTimer();
-        startSlideTimer();
-      })
-    );
-    carouselContainer?.addEventListener("mouseenter", stopSlideTimer);
-    carouselContainer?.addEventListener("mouseleave", startSlideTimer);
-    if (slides.length) startSlideTimer();
-
     faqItems.forEach((item) => {
       const header = item.querySelector<HTMLButtonElement>("button");
       const content = item.querySelector<HTMLElement>(".faq-content");
@@ -405,10 +417,13 @@ export default function HomePage() {
 
     return () => {
       window.removeEventListener("scroll", onScrollNavbar);
+      window.removeEventListener("resize", onResizeHorizontal);
       document.removeEventListener("mousemove", onMouseMove);
       window.removeEventListener("scroll", backToTopScroll);
       mobileMenuBtn?.removeEventListener("click", toggleMenu);
       mobileNavLinks.forEach((link) => link.removeEventListener("click", toggleMenu));
+      navLinks.forEach((link) => link.removeEventListener("click", handleNavClick));
+      mobileNavLinks.forEach((link) => link.removeEventListener("click", handleNavClick));
       tiltCards.forEach((card) => {
         card.replaceWith(card.cloneNode(true));
       });
@@ -416,62 +431,66 @@ export default function HomePage() {
       modalCloseBtn?.removeEventListener("click", closeModal);
       modalOverlay?.removeEventListener("click", closeModal);
       document.removeEventListener("keydown", onKeyDown);
-      nextBtn?.replaceWith(nextBtn.cloneNode(true));
-      prevBtn?.replaceWith(prevBtn.cloneNode(true));
-      carouselContainer?.replaceWith(carouselContainer.cloneNode(true));
       faqItems.forEach((item) => item.replaceWith(item.cloneNode(true)));
       contactForm?.replaceWith(contactForm.cloneNode(true));
       backToTopBtn?.replaceWith(backToTopBtn.cloneNode(true));
-      if (slideInterval) clearInterval(slideInterval);
       statsObserver?.disconnect();
       revealObserver?.disconnect();
       activeSectionObserver?.disconnect();
+      horizontalCtx?.revert();
+      ScrollTrigger.getById("services-works-horizontal")?.kill();
     };
-  }, []);
+  }, [loaderDone]);
 
   return (
     <div className="relative min-h-screen bg-neon-dark text-gray-300">
-      <div className="fixed inset-0 pointer-events-none z-0 bg-noise-pattern opacity-40 mix-blend-overlay" />
-      <div
-        id="cursor-spotlight"
-        className="pointer-events-none fixed inset-0 z-0 transition duration-300"
-        style={{
-          background:
-            "radial-gradient(600px at var(--x, 50%) var(--y, 50%), rgba(0, 247, 255, 0.07) 0%, transparent 80%)",
-        }}
-      />
-
-      <Navbar
-        links={cmsData.navbar.links}
-        ctaText={cmsData.navbar.ctaText}
-        ctaLink={cmsData.navbar.ctaLink}
-        signInText={cmsData.navbar.signInText}
-        signInLink={cmsData.navbar.signInLink}
-      />
-
-      <main>
-        <Hero
-          headline={cmsData.hero.headline}
-          subheadline={cmsData.hero.subheadline}
-          ctaPrimary={cmsData.hero.ctaPrimary}
-          ctaSecondary={cmsData.hero.ctaSecondary}
-          stats={cmsData.hero.stats}
+      {!loaderDone && <Loader onFinish={() => setLoaderDone(true)} />}
+      <div className={`transition-opacity duration-700 ${loaderDone ? "opacity-100" : "opacity-0 pointer-events-none select-none"}`}>
+        <div className="fixed inset-0 pointer-events-none z-0 bg-noise-pattern opacity-40 mix-blend-overlay" />
+        <div
+          id="cursor-spotlight"
+          className="pointer-events-none fixed inset-0 z-0 transition duration-300"
+          style={{
+            background:
+              "radial-gradient(600px at var(--x, 50%) var(--y, 50%), rgba(0, 247, 255, 0.07) 0%, transparent 80%)",
+          }}
         />
-        <Services
-          title={cmsData.services.title}
-          description={cmsData.services.description}
-          filters={serviceFilters}
-          items={cmsData.services.items}
+
+        <Navbar
+          links={cmsData.navbar.links}
+          ctaText={cmsData.navbar.ctaText}
+          ctaLink={cmsData.navbar.ctaLink}
+          signInText={cmsData.navbar.signInText}
+          signInLink={cmsData.navbar.signInLink}
         />
-        <Works title={cmsData.works.title} description={cmsData.works.description} items={cmsData.works.items} />
-        <About title={cmsData.about.title} content={cmsData.about.content} values={cmsData.about.values} steps={cmsData.timeline.steps} />
-        <Testimonials title={cmsData.testimonials.title} items={cmsData.testimonials.items} />
-        <FAQ title="Frequently Asked Questions" items={cmsData.faq.items} />
-        <Contact heading={cmsData.contact.heading} email={cmsData.global.email} address={cmsData.global.address} />
-      </main>
 
-      <Footer copyright={cmsData.footer.copyright} links={cmsData.footer.links} />
+        <main>
+          <Hero
+            headline={cmsData.hero.headline}
+            subheadline={cmsData.hero.subheadline}
+            ctaPrimary={cmsData.hero.ctaPrimary}
+            ctaSecondary={cmsData.hero.ctaSecondary}
+            stats={cmsData.hero.stats}
+          />
+          <div id="services-works-wrapper" className="horizontal-wrapper">
+            <div id="services-works-track" className="horizontal-track">
+              <Services
+                title={cmsData.services.title}
+                description={cmsData.services.description}
+                filters={serviceFilters}
+                items={cmsData.services.items}
+              />
+              <Works title={cmsData.works.title} description={cmsData.works.description} items={cmsData.works.items} />
+            </div>
+          </div>
+          <About title={cmsData.about.title} content={cmsData.about.content} values={cmsData.about.values} steps={cmsData.timeline.steps} />
+          <Testimonials title={cmsData.testimonials.title} items={cmsData.testimonials.items} />
+          <FAQ title="Frequently Asked Questions" items={cmsData.faq.items} />
+          <Contact heading={cmsData.contact.heading} email={cmsData.global.email} address={cmsData.global.address} />
+        </main>
 
+        <Footer copyright={cmsData.footer.copyright} links={cmsData.footer.links} />
+      </div>
       <div id="toast-container" className="fixed bottom-4 right-4 z-[60] space-y-4" />
     </div>
   );
