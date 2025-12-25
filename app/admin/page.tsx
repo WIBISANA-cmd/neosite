@@ -3,8 +3,9 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import AdminDashboard from "./components/AdminDashboard";
+import AdminChatPanel from "./components/AdminChatPanel";
 import { Input, ListEditor, SectionCard } from "./components/ui";
-import { CMSData, defaultCmsData, FAQItem, FooterLink, HeroStat, NavLink, ServiceItem, Testimonial, TimelineStep, WorkItem } from "../../lib/cmsDefaults";
+import { CMSData, ContactOffering, defaultCmsData, FAQItem, FooterLink, HeroStat, NavLink, ServiceItem, Testimonial, TimelineStep, WorkItem } from "../../lib/cmsDefaults";
 
 type AdminSection = keyof CMSData | "dashboard";
 
@@ -22,7 +23,15 @@ export default function AdminPage() {
     const stored = typeof window !== "undefined" ? localStorage.getItem(STORAGE_KEY) : null;
     if (stored) {
       try {
-        setData(JSON.parse(stored));
+        const parsed = JSON.parse(stored);
+        setData({
+          ...defaultCmsData,
+          ...parsed,
+          contact: {
+            ...defaultCmsData.contact,
+            ...parsed.contact,
+          },
+        });
       } catch {
         // ignore corrupted storage
       }
@@ -51,7 +60,7 @@ export default function AdminPage() {
       timeline: "Timeline",
       testimonials: "Testimonials",
       faq: "FAQ",
-      contact: "Contact",
+      contact: "Service Pricing",
       footer: "Footer",
       seo: "SEO",
     }),
@@ -170,6 +179,7 @@ export default function AdminPage() {
               <button className="btn-danger text-xs px-3 py-1.5" onClick={resetData}>
                 Reset
               </button>
+              <AdminChatPanel />
               <div className="relative">
                 <button
                   className="w-9 h-9 rounded-full bg-gradient-to-tr from-neon-secondary to-neon-primary text-sm font-bold text-neon-dark flex items-center justify-center shadow-neon-glow border border-white/10"
@@ -407,13 +417,28 @@ export default function AdminPage() {
             )}
 
             {active === "contact" && (
-              <SectionCard title="Contact">
-                <div className="grid md:grid-cols-2 gap-4">
-                  <Input label="Heading" value={data.contact.heading} onChange={(v) => update((d) => (d.contact.heading = v))} />
-                  <Input label="Recipient" value={data.contact.emailRecipient} onChange={(v) => update((d) => (d.contact.emailRecipient = v))} />
-                  <Input label="Success Message" value={data.contact.successMessage} onChange={(v) => update((d) => (d.contact.successMessage = v))} />
-                </div>
-              </SectionCard>
+              <div className="space-y-4">
+                <SectionCard title="Service Pricing">
+                  <div className="grid md:grid-cols-2 gap-4">
+                    <Input label="Heading" value={data.contact.heading} onChange={(v) => update((d) => (d.contact.heading = v))} />
+                    <Input label="Recipient" value={data.contact.emailRecipient} onChange={(v) => update((d) => (d.contact.emailRecipient = v))} />
+                    <Input label="Success Message" value={data.contact.successMessage} onChange={(v) => update((d) => (d.contact.successMessage = v))} />
+                  </div>
+                </SectionCard>
+                <ListEditor<ContactOffering>
+                  title="Service Offerings"
+                  items={data.contact.offerings ?? defaultCmsData.contact.offerings}
+                  onChange={(items) => update((d) => (d.contact.offerings = items))}
+                  addItem={() => ({ title: "New Service", desc: "Describe the service", price: "Start from $0" })}
+                  renderItem={(item, updateItem) => (
+                    <div className="grid md:grid-cols-3 gap-3">
+                      <Input label="Title" value={item.title} onChange={(v) => updateItem({ title: v })} />
+                      <Input label="Price" value={item.price} onChange={(v) => updateItem({ price: v })} />
+                      <Input label="Description" value={item.desc} textarea onChange={(v) => updateItem({ desc: v })} />
+                    </div>
+                  )}
+                />
+              </div>
             )}
 
             {active === "footer" && (

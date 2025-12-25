@@ -10,6 +10,7 @@ import { Testimonials } from "../components/Testimonials";
 import { FAQ } from "../components/FAQ";
 import { Contact } from "../components/Contact";
 import { Footer } from "../components/Footer";
+import { ChatWidget } from "../components/ChatWidget";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { gsap } from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
@@ -25,7 +26,15 @@ export default function HomePage() {
     const stored = typeof window !== "undefined" ? localStorage.getItem("neosite_cms_data") : null;
     if (stored) {
       try {
-        setCmsData(JSON.parse(stored));
+        const parsed = JSON.parse(stored);
+        setCmsData({
+          ...defaultCmsData,
+          ...parsed,
+          contact: {
+            ...defaultCmsData.contact,
+            ...parsed.contact,
+          },
+        });
       } catch {
         setCmsData(defaultCmsData);
       }
@@ -486,12 +495,18 @@ export default function HomePage() {
           <About title={cmsData.about.title} content={cmsData.about.content} values={cmsData.about.values} steps={cmsData.timeline.steps} />
           <Testimonials title={cmsData.testimonials.title} items={cmsData.testimonials.items} />
           <FAQ title="Frequently Asked Questions" items={cmsData.faq.items} />
-          <Contact heading={cmsData.contact.heading} email={cmsData.global.email} address={cmsData.global.address} />
+          <Contact
+            heading={cmsData.contact.heading}
+            email={cmsData.global.email}
+            address={cmsData.global.address}
+            offerings={cmsData.contact.offerings || defaultCmsData.contact.offerings}
+          />
         </main>
 
         <Footer copyright={cmsData.footer.copyright} links={cmsData.footer.links} />
       </div>
       <div id="toast-container" className="fixed bottom-4 right-4 z-[60] space-y-4" />
+      <ChatWidget />
     </div>
   );
 }

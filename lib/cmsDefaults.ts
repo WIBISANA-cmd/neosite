@@ -6,6 +6,7 @@ export type TimelineStep = { title: string; desc: string };
 export type Testimonial = { name: string; role: string; message: string; rating: number };
 export type FAQItem = { q: string; a: string };
 export type FooterLink = { label: string; href: string };
+export type ContactOffering = { title: string; desc: string; price: string };
 
 export type CMSData = {
   global: {
@@ -30,7 +31,7 @@ export type CMSData = {
   timeline: { steps: TimelineStep[] };
   testimonials: { title: string; items: Testimonial[] };
   faq: { items: FAQItem[] };
-  contact: { heading: string; emailRecipient: string; successMessage: string };
+  contact: { heading: string; emailRecipient: string; successMessage: string; offerings: ContactOffering[] };
   footer: { copyright: string; links: FooterLink[] };
   seo: { title: string; description: string; robotsIndex: boolean };
 };
@@ -213,6 +214,33 @@ export const defaultCmsData: CMSData = {
     heading: "Let's build something legendary.",
     emailRecipient: "hello@neosite.digital",
     successMessage: "Message sent successfully! We will contact you soon.",
+    offerings: [
+      {
+        title: "Brand Identity",
+        desc: "Logo, brand system, and visual direction for a cohesive presence.",
+        price: "Start from $1,200",
+      },
+      {
+        title: "UI/UX Design",
+        desc: "Wireframe, prototype, and polished UI for web or mobile apps.",
+        price: "Start from $2,500",
+      },
+      {
+        title: "Web Development",
+        desc: "High-performance site with CMS, analytics, and SEO-ready setup.",
+        price: "Start from $3,800",
+      },
+      {
+        title: "Motion & 3D",
+        desc: "Product motion, 3D scenes, and interactive hero experiences.",
+        price: "Start from $4,500",
+      },
+      {
+        title: "Growth Sprint",
+        desc: "Landing page, funnel, and ad creatives to boost conversions.",
+        price: "Start from $1,800",
+      },
+    ],
   },
   footer: {
     copyright: "© 2023 NeoSite Digital. All rights reserved.",

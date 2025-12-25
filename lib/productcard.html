@@ -1,0 +1,536 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Document</title>
+
+    <!-- Tailwind CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <!-- Tailwind config (untuk warna accent & font) -->
+    <script>
+      tailwind.config = {
+        theme: {
+          extend: {
+            fontFamily: {
+              inter: ["Inter", "sans-serif"],
+            },
+            colors: {
+              accent: "#ff6b35",
+              bg: "#07090d",
+              text: "#c5c7ce",
+            },
+            boxShadow: {
+              active: "0 18px 55px rgba(0, 0, 0, 0.45)",
+              activeMobile: "0 8px 25px rgba(0, 0, 0, 0.3)",
+            },
+          },
+        },
+      };
+    </script>
+
+    <!-- Small CSS utilities that Tailwind cannot express 1:1 without plugins -->
+    <style type="text/tailwindcss">
+      @layer base {
+        :root {
+          --gap: 1.25rem;
+          --speed: 0.55s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+          --closed: 5rem;
+          --open: 30rem;
+          --accent: #ff6b35;
+        }
+        @media (max-width: 767px) {
+          :root {
+            --closed: 100%;
+            --open: 100%;
+            --gap: 0.8rem;
+          }
+        }
+
+        * {
+          margin: 0;
+          padding: 0;
+          box-sizing: border-box;
+        }
+        body {
+          font-family: Inter, sans-serif;
+          background: #07090d;
+          color: #c5c7ce;
+        }
+      }
+
+      @layer utilities {
+        /* Track scrollbar hide */
+        .no-scrollbar::-webkit-scrollbar {
+          display: none;
+        }
+
+        /* Snap */
+        .snap-x-mandatory {
+          scroll-snap-type: x mandatory;
+        }
+        .snap-y-mandatory {
+          scroll-snap-type: y mandatory;
+        }
+
+        /* Card sizing animation */
+        .card {
+          flex: 0 0 var(--closed);
+          transition: flex-basis var(--speed), transform var(--speed);
+        }
+        .card[active] {
+          flex-basis: var(--open);
+          transform: translateY(-6px);
+          box-shadow: 0 18px 55px rgba(0, 0, 0, 0.45);
+        }
+
+        /* Card bg image effects */
+        .card-bg {
+          filter: brightness(0.75) saturate(75%);
+          transition: filter 0.3s, transform var(--speed);
+        }
+        .card:hover .card-bg {
+          filter: brightness(0.9) saturate(100%);
+          transform: scale(1.06);
+        }
+
+        /* Title vertical mode on desktop (non-tailwind property) */
+        .title-vertical {
+          writing-mode: vertical-rl;
+          transform: rotate(180deg);
+        }
+
+        /* Active state content toggles */
+        .card .card-thumb,
+        .card .card-desc,
+        .card .card-btn {
+          display: none;
+        }
+        .card[active] .card-thumb,
+        .card[active] .card-desc,
+        .card[active] .card-btn {
+          display: block;
+        }
+
+        /* Active content layout */
+        .card[active] .card-content {
+          flex-direction: row;
+          align-items: center;
+          padding: 1.2rem 2rem;
+          gap: 1.1rem;
+        }
+        .card[active] .card-title {
+          writing-mode: horizontal-tb;
+          transform: none;
+          font-size: 2.4rem;
+        }
+
+        /* Mobile overrides: match your last @media(max-width:767px) block exactly */
+        @media (max-width: 767px) {
+          .head-mobile {
+            padding: 30px 15px 20px;
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 1rem;
+          }
+          .slider-mobile {
+            padding: 0 15px;
+          }
+          .track-mobile {
+            flex-direction: column;
+            scroll-snap-type: y mandatory;
+            gap: 0.8rem;
+            padding-bottom: 20px;
+            align-items: center;
+            justify-content: flex-start;
+          }
+          .card-mobile {
+            height: auto;
+            min-height: 80px;
+            flex: 0 0 auto;
+            width: 100%;
+            scroll-snap-align: start;
+          }
+          .card-mobile[active] {
+            min-height: 300px;
+            transform: none;
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
+          }
+          .content-mobile {
+            flex-direction: row;
+            justify-content: flex-start;
+            padding: 1rem;
+            align-items: center;
+            gap: 1rem;
+          }
+          .title-mobile {
+            writing-mode: horizontal-tb;
+            transform: none;
+            font-size: 1.2rem;
+            margin-right: auto;
+          }
+          .card-mobile .card-thumb,
+          .card-mobile .card-desc,
+          .card-mobile .card-btn {
+            display: none;
+          }
+          .card-mobile[active] .card-content {
+            align-items: flex-start;
+            padding: 1.5rem;
+          }
+          .card-mobile[active] .card-title {
+            font-size: 1.8rem;
+            margin-bottom: 1rem;
+            margin-top: 2rem;
+          }
+          .card-mobile[active] .card-thumb {
+            width: 200px;
+            height: 267px;
+            border-radius: 0.35rem;
+            margin-bottom: 1rem;
+          }
+          .card-mobile[active] .card-desc {
+            font-size: 0.95rem;
+            max-width: 100%;
+            margin-bottom: 1rem;
+          }
+          .card-mobile[active] .card-btn {
+            align-self: center;
+            width: 100%;
+            text-align: center;
+            padding: 0.7rem;
+          }
+          .dots-mobile {
+            display: none;
+          }
+          .controls-mobile {
+            width: 100%;
+            justify-content: space-between;
+            padding: 0 15px 20px;
+          }
+          .navbtn-mobile {
+            position: static;
+            transform: none;
+            width: 2rem;
+            height: 2rem;
+            font-size: 1.2rem;
+          }
+        }
+      }
+    </style>
+  </head>
+
+  <body class="bg-bg text-text font-inter">
+    <section>
+      <!-- HEAD -->
+      <div
+        class="mx-auto max-w-[1400px] px-5 pt-[70px] pb-10 flex justify-between items-end gap-8 head-mobile"
+      >
+        <h2 class="text-white font-normal text-[1.5rem] leading-[1.2] lg:text-[2.25rem]">
+          Boost your professional workflow and productivity
+        </h2>
+
+        <div class="flex flex-row gap-2 controls controls-mobile">
+          <button
+            id="prev"
+            class="w-10 h-10 rounded-full border-0 bg-white/10 text-white text-2xl flex items-center justify-center cursor-pointer transition duration-300 hover:bg-accent disabled:opacity-30 disabled:cursor-default navbtn-mobile"
+            aria-label="Prev"
+          >
+            ‹
+          </button>
+          <button
+            id="next"
+            class="w-10 h-10 rounded-full border-0 bg-white/10 text-white text-2xl flex items-center justify-center cursor-pointer transition duration-300 hover:bg-accent disabled:opacity-30 disabled:cursor-default navbtn-mobile"
+            aria-label="Next"
+          >
+            ›
+          </button>
+        </div>
+      </div>
+
+      <!-- SLIDER -->
+      <div class="mx-auto max-w-[1400px] overflow-hidden slider slider-mobile">
+        <div
+          class="flex items-start justify-center gap-[var(--gap)] pb-10 no-scrollbar snap-x-mandatory scroll-smooth track track-mobile"
+          id="track"
+        >
+          <!-- CARD 1 -->
+          <article
+            class="relative h-[26rem] rounded-2xl overflow-hidden cursor-pointer card card-mobile project-card"
+            active
+          >
+            <img
+              class="absolute inset-0 w-full h-full object-cover card-bg project-card__bg"
+              src="https://cdn-front.freepik.com/home/anon-rvmp/professionals/designers.webp"
+              alt=""
+            />
+            <div
+              class="absolute inset-0 z-[2] flex flex-col items-center justify-center gap-[0.7rem] p-0 bg-[linear-gradient(transparent_40%,rgba(0,0,0,0.85)_100%)] card-content content-mobile project-card__content"
+            >
+              <img
+                class="w-[133px] h-[269px] rounded-[0.45rem] object-cover shadow-[0_4px_10px_rgba(0,0,0,0.4)] card-thumb project-card__thumb"
+                src="https://cdn-front.freepik.com/home/anon-rvmp/professionals/img-designer.webp?w=480"
+                alt=""
+              />
+              <div>
+                <h3
+                  class="text-white font-bold text-[1.35rem] title-vertical card-title title-mobile project-card__title"
+                >
+                  Designers
+                </h3>
+                <p class="text-[#ddd] text-base leading-[1.4] max-w-[16rem] card-desc project-card__desc">
+                  Tools that work like you do.
+                </p>
+                <button
+                  class="px-[1.3rem] py-[0.55rem] rounded-full border-0 bg-accent text-white text-[0.9rem] font-semibold cursor-pointer hover:bg-[#ff824f] card-btn project-card__btn"
+                >
+                  Details
+                </button>
+              </div>
+            </div>
+          </article>
+
+          <!-- CARD 2 -->
+          <article class="relative h-[26rem] rounded-2xl overflow-hidden cursor-pointer card card-mobile project-card">
+            <img
+              class="absolute inset-0 w-full h-full object-cover card-bg project-card__bg"
+              src="https://cdn-front.freepik.com/home/anon-rvmp/professionals/marketers.webp"
+              alt=""
+            />
+            <div
+              class="absolute inset-0 z-[2] flex flex-col items-center justify-center gap-[0.7rem] p-0 bg-[linear-gradient(transparent_40%,rgba(0,0,0,0.85)_100%)] card-content content-mobile project-card__content"
+            >
+              <img
+                class="w-[133px] h-[269px] rounded-[0.45rem] object-cover shadow-[0_4px_10px_rgba(0,0,0,0.4)] card-thumb project-card__thumb"
+                src="https://cdn-front.freepik.com/home/anon-rvmp/professionals/img-marketer.webp?w=480"
+                alt=""
+              />
+              <div>
+                <h3 class="text-white font-bold text-[1.35rem] title-vertical card-title title-mobile project-card__title">
+                  Marketers
+                </h3>
+                <p class="text-[#ddd] text-base leading-[1.4] max-w-[16rem] card-desc project-card__desc">
+                  Create faster, explore new possibilities.
+                </p>
+                <button
+                  class="px-[1.3rem] py-[0.55rem] rounded-full border-0 bg-accent text-white text-[0.9rem] font-semibold cursor-pointer hover:bg-[#ff824f] card-btn project-card__btn"
+                >
+                  Details
+                </button>
+              </div>
+            </div>
+          </article>
+
+          <!-- CARD 3 -->
+          <article class="relative h-[26rem] rounded-2xl overflow-hidden cursor-pointer card card-mobile project-card">
+            <img
+              class="absolute inset-0 w-full h-full object-cover card-bg project-card__bg"
+              src="https://cdn-front.freepik.com/home/anon-rvmp/professionals/filmmakers.webp"
+              alt=""
+            />
+            <div
+              class="absolute inset-0 z-[2] flex flex-col items-center justify-center gap-[0.7rem] p-0 bg-[linear-gradient(transparent_40%,rgba(0,0,0,0.85)_100%)] card-content content-mobile project-card__content"
+            >
+              <img
+                class="w-[133px] h-[269px] rounded-[0.45rem] object-cover shadow-[0_4px_10px_rgba(0,0,0,0.4)] card-thumb project-card__thumb"
+                src="https://cdn-front.freepik.com/home/anon-rvmp/professionals/img-film.webp?w=480"
+                alt=""
+              />
+              <div>
+                <h3 class="text-white font-bold text-[1.35rem] title-vertical card-title title-mobile project-card__title">
+                  VFX filmmakers
+                </h3>
+                <p class="text-[#ddd] text-base leading-[1.4] max-w-[16rem] card-desc project-card__desc">
+                  From concept to cut, faster.
+                </p>
+                <button
+                  class="px-[1.3rem] py-[0.55rem] rounded-full border-0 bg-accent text-white text-[0.9rem] font-semibold cursor-pointer hover:bg-[#ff824f] card-btn project-card__btn"
+                >
+                  Details
+                </button>
+              </div>
+            </div>
+          </article>
+
+          <!-- CARD 4 -->
+          <article class="relative h-[26rem] rounded-2xl overflow-hidden cursor-pointer card card-mobile project-card">
+            <img
+              class="absolute inset-0 w-full h-full object-cover card-bg project-card__bg"
+              src="https://cdn-front.freepik.com/home/anon-rvmp/professionals/content-creators.webp"
+              alt=""
+            />
+            <div
+              class="absolute inset-0 z-[2] flex flex-col items-center justify-center gap-[0.7rem] p-0 bg-[linear-gradient(transparent_40%,rgba(0,0,0,0.85)_100%)] card-content content-mobile project-card__content"
+            >
+              <img
+                class="w-[133px] h-[269px] rounded-[0.45rem] object-cover shadow-[0_4px_10px_rgba(0,0,0,0.4)] card-thumb project-card__thumb"
+                src="https://cdn-front.freepik.com/home/anon-rvmp/professionals/img-content.webp?w=480"
+                alt=""
+              />
+              <div>
+                <h3 class="text-white font-bold text-[1.35rem] title-vertical card-title title-mobile project-card__title">
+                  Content creators
+                </h3>
+                <p class="text-[#ddd] text-base leading-[1.4] max-w-[16rem] card-desc project-card__desc">
+                  Make scroll-stopping content, easily.
+                </p>
+                <button
+                  class="px-[1.3rem] py-[0.55rem] rounded-full border-0 bg-accent text-white text-[0.9rem] font-semibold cursor-pointer hover:bg-[#ff824f] card-btn project-card__btn"
+                >
+                  Details
+                </button>
+              </div>
+            </div>
+          </article>
+
+          <!-- CARD 5 -->
+          <article class="relative h-[26rem] rounded-2xl overflow-hidden cursor-pointer card card-mobile project-card">
+            <img
+              class="absolute inset-0 w-full h-full object-cover card-bg project-card__bg"
+              src="https://cdn-front.freepik.com/home/anon-rvmp/professionals/art-directors.webp"
+              alt=""
+            />
+            <div
+              class="absolute inset-0 z-[2] flex flex-col items-center justify-center gap-[0.7rem] p-0 bg-[linear-gradient(transparent_40%,rgba(0,0,0,0.85)_100%)] card-content content-mobile project-card__content"
+            >
+              <img
+                class="w-[133px] h-[269px] rounded-[0.45rem] object-cover shadow-[0_4px_10px_rgba(0,0,0,0.4)] card-thumb project-card__thumb"
+                src="https://cdn-front.freepik.com/home/anon-rvmp/professionals/img-art.webp?w=480"
+                alt=""
+              />
+              <div>
+                <h3 class="text-white font-bold text-[1.35rem] title-vertical card-title title-mobile project-card__title">
+                  Art directors
+                </h3>
+                <p class="text-[#ddd] text-base leading-[1.4] max-w-[16rem] card-desc project-card__desc">
+                  Creative control at every stage.
+                </p>
+                <button
+                  class="px-[1.3rem] py-[0.55rem] rounded-full border-0 bg-accent text-white text-[0.9rem] font-semibold cursor-pointer hover:bg-[#ff824f] card-btn project-card__btn"
+                >
+                  Details
+                </button>
+              </div>
+            </div>
+          </article>
+        </div>
+      </div>
+
+      <!-- DOTS -->
+      <div class="flex justify-center gap-2 py-5 dots dots-mobile" id="dots"></div>
+    </section>
+
+    <script>
+      (() => {
+        const track = document.getElementById("track");
+        const wrap = track.parentElement;
+        const cards = Array.from(track.children);
+        const prev = document.getElementById("prev");
+        const next = document.getElementById("next");
+        const dotsBox = document.getElementById("dots");
+
+        const isMobile = () => matchMedia("(max-width:767px)").matches;
+
+        cards.forEach((_, i) => {
+          const dot = document.createElement("span");
+          dot.className =
+            "w-[13px] h-[13px] rounded-full bg-white/35 cursor-pointer transition duration-300 dot";
+          dot.onclick = () => activate(i, true);
+          dotsBox.appendChild(dot);
+        });
+        const dots = Array.from(dotsBox.children);
+
+        let current = 0;
+
+        function center(i) {
+          const card = cards[i];
+          const axis = isMobile() ? "top" : "left";
+          const size = isMobile() ? "clientHeight" : "clientWidth";
+          const start = isMobile() ? card.offsetTop : card.offsetLeft;
+          wrap.scrollTo({
+            [axis]: start - (wrap[size] / 2 - card[size] / 2),
+            behavior: "smooth",
+          });
+        }
+
+        function toggleUI(i) {
+          cards.forEach((c, k) => c.toggleAttribute("active", k === i));
+          dots.forEach((d, k) => {
+            d.classList.toggle("active", k === i);
+            // Tailwind replacement for .dot.active styling:
+            if (k === i) {
+              d.classList.add("bg-accent", "scale-[1.2]");
+              d.classList.remove("bg-white/35");
+            } else {
+              d.classList.remove("bg-accent", "scale-[1.2]");
+              d.classList.add("bg-white/35");
+            }
+          });
+          prev.disabled = i === 0;
+          next.disabled = i === cards.length - 1;
+        }
+
+        function activate(i, scroll) {
+          if (i === current) return;
+          current = i;
+          toggleUI(i);
+          if (scroll) center(i);
+        }
+
+        function go(step) {
+          activate(Math.min(Math.max(current + step, 0), cards.length - 1), true);
+        }
+
+        prev.onclick = () => go(-1);
+        next.onclick = () => go(1);
+
+        addEventListener(
+          "keydown",
+          (e) => {
+            if (["ArrowRight", "ArrowDown"].includes(e.key)) go(1);
+            if (["ArrowLeft", "ArrowUp"].includes(e.key)) go(-1);
+          },
+          { passive: true }
+        );
+
+        cards.forEach((card, i) => {
+          card.addEventListener(
+            "mouseenter",
+            () => matchMedia("(hover:hover)").matches && activate(i, true)
+          );
+          card.addEventListener("click", () => activate(i, true));
+        });
+
+        let sx = 0,
+          sy = 0;
+        track.addEventListener(
+          "touchstart",
+          (e) => {
+            sx = e.touches[0].clientX;
+            sy = e.touches[0].clientY;
+          },
+          { passive: true }
+        );
+
+        track.addEventListener(
+          "touchend",
+          (e) => {
+            const dx = e.changedTouches[0].clientX - sx;
+            const dy = e.changedTouches[0].clientY - sy;
+            if (isMobile() ? Math.abs(dy) > 60 : Math.abs(dx) > 60)
+              go((isMobile() ? dy : dx) > 0 ? -1 : 1);
+          },
+          { passive: true }
+        );
+
+        if (window.matchMedia("(max-width:767px)").matches) dotsBox.hidden = true;
+
+        addEventListener("resize", () => center(current));
+
+        toggleUI(0);
+        center(0);
+      })();
+    </script>
+  </body>
+</html>
